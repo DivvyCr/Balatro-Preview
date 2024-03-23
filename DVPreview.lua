@@ -6,12 +6,12 @@
 
 if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
-if not DV.PRE then
-   DV.PRE = {
-      enabled = true,
-      joker_order = {},
-   }
-end
+
+DV.PRE = {
+   enabled = true,
+   hide_face_down = true,
+   joker_order = {},
+}
 
 local orig_start = Game.start_run
 function Game:start_run(args)
@@ -25,6 +25,12 @@ end
 --
 
 function DV.PRE.simulate()
+   if DV.PRE.hide_face_down then
+      for _, card in ipairs(G.hand.highlighted) do
+         if card.facing == "back" then return nil end
+      end
+   end
+
    return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards)
 end
 
@@ -147,7 +153,12 @@ end
 
 -- Add animation to preview text:
 function G.FUNCS.simulation_UI_set(e)
-   local new_preview_text = number_format(G.GAME.current_round.current_hand.simulated_score)
+   local new_preview_text = ""
+   if G.GAME.current_round.current_hand.simulated_score then
+      new_preview_text = number_format(G.GAME.current_round.current_hand.simulated_score)
+   else
+      new_preview_text = "????"
+   end
    if (not G.GAME.current_round.current_hand.preview_text) or new_preview_text ~= G.GAME.current_round.current_hand.preview_text then
       G.GAME.current_round.current_hand.preview_text = new_preview_text
       e.config.object:update_text()
@@ -176,10 +187,18 @@ function G.UIDEF.settings_tab(tab)
       G.HUD:recalculate()
    end
 
+   function face_down_toggle_callback(_)
+      G.GAME.current_round.current_hand.simulated_score = DV.PRE.simulate()
+      G.HUD:recalculate()
+   end
+
    local contents = orig_settings(tab)
    if tab == 'Game' then
-      local preview_toggle_node = create_toggle({label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "enabled", callback = preview_toggle_callback})
-      table.insert(contents.nodes, preview_toggle_node)
+      local preview_setting_nodes = {n = G.UIT.R, config = {align = "cm"}, nodes ={
+                                        create_toggle({label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "enabled", callback = preview_toggle_callback}),
+                                        create_toggle({label = "Hide Score Preview if Any Card is Face-Down", ref_table = DV.PRE, ref_value = "hide_face_down", callback = face_down_toggle_callback})
+                                    }}
+      table.insert(contents.nodes, preview_setting_nodes)
    end
    return contents
 end
