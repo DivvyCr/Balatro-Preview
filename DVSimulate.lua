@@ -13,7 +13,7 @@ if not DV.SIM then DV.SIM = {} end
 
 -- These jokers have side-effects that should not be simulated,
 -- because their effects are inconsequential to scoring:
-DV.SIM.IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Burnt Joker"}
+DV.SIM.IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Burnt Joker", "Superposition"}
 
 --
 -- MAIN FUNCTION:
@@ -44,6 +44,8 @@ function DV.SIM.run(played_cards, held_cards, jokers)
 
    -- Run evaluation if hand is not debuffed:
    if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name) then
+      -- 0. 'Before' effects from JOKERS (eg. levelling-up Spare Trousers):
+      DV.SIM.eval_before_effects()
       -- Set mult and chips to base hand values (with level):
       local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
       DV.SIM.mult = mod_mult(hand_info.mult)
@@ -230,6 +232,12 @@ function DV.SIM.eval_blind_effect()
    DV.SIM.mult, DV.SIM.chips = mod_mult(nu_mult), mod_chips(nu_chips)
 end
 
+function DV.SIM.eval_before_effects()
+   for _, joker in ipairs(G.jokers.cards) do
+      DV.SIM.eval_card(joker, DV.SIM.get_context(G.jokers, {before = true}))
+   end
+end
+
 function DV.SIM.get_scoring_hand(played_cards, scoring_hand)
    local pures = {}
    for i=1, #played_cards do
@@ -271,7 +279,7 @@ function DV.SIM.set_parameters(played_cards)
    DV.SIM.get_context = function(cardarea, args)
       local context = {
          cardarea = cardarea,
-         full_hand = DV.SIM.played_cards,
+         full_hand = DV.SIM.data.played_cards,
          scoring_name = DV.SIM.data.scoring_name,
          scoring_hand = DV.SIM.data.scoring_hand,
          poker_hands = DV.SIM.data.poker_hands
