@@ -21,12 +21,30 @@ function Game:start_run(args)
 end
 
 --
+-- SIMULATION:
+--
+
+function DV.PRE.simulate()
+   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards)
+end
+
+function DV.PRE.get_held_cards()
+   local sim_hand = {}
+   for _, sim_card in ipairs(DV.deep_copy(G.hand.cards)) do
+      if not sim_card.highlighted then
+         table.insert(sim_hand, sim_card)
+      end
+   end
+   return sim_hand
+end
+
+--
 -- SIMULATION UPDATE ADVICE:
 --
 
 function DV.PRE.add_update_event(trigger)
    function sim_func()
-      G.GAME.current_round.current_hand.simulated_score = DV.SIM.simulate()
+      G.GAME.current_round.current_hand.simulated_score = DV.PRE.simulate()
       return true
    end
    if DV.PRE.enabled then
@@ -151,7 +169,7 @@ function G.UIDEF.settings_tab(tab)
       else
          -- Preview was just enabled, so add preview node:
          G.HUD:add_child(DV.PRE.get_sim_node(), G.HUD:get_UIE_by_ID("dv_sim_wrap"))
-         G.GAME.current_round.current_hand.simulated_score = DV.SIM.simulate()
+         G.GAME.current_round.current_hand.simulated_score = DV.PRE.simulate()
       end
       G.HUD:recalculate()
    end

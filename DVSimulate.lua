@@ -7,25 +7,40 @@
 if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
 
--- These jokers have side-effects that should not be simulated:
+--
+-- CONFIGURATION:
+--
+
+-- These jokers have side-effects that should not be simulated,
+-- because their effects are inconsequential to scoring:
 DV.SIM.IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Burnt Joker"}
 
--- Run simulation:
--- Returns total score from currently selected hand.
-function DV.SIM.simulate()
-   if #G.hand.highlighted == 0 then return 0 end
+--
+-- MAIN FUNCTION:
+--
+
+-- Run a simulation.
+--   played_cards: an array of Card objects that should be played
+--   held_cards:   an array of Card objects that should be held in hand (excl. played cards)
+--   jokers:       an array of joker Card objects that should be active
+--
+-- NOTE: this simulation assumes only vanilla jokers are used,
+--       modded jokers should still work but there will likely be side-effects,
+--       especially if they create/destroy/modify consumables or the deck.
+function DV.SIM.run(played_cards, held_cards, jokers)
+   if #played_cards == 0 then return 0 end
+
+   local play_to_simulate = DV.deep_copy(played_cards)
+   DV.SIM.set_parameters(play_to_simulate)
+
+   local real_hand = G.hand.cards
+   G.hand.cards = DV.deep_copy(held_cards)
+
+   local real_jokers = G.jokers.cards
+   G.jokers.cards = DV.deep_copy(jokers)
 
    local real_rand = G.GAME.pseudorandom
    G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
-
-   local real_jokers = G.jokers.cards
-   G.jokers.cards = DV.deep_copy(G.jokers.cards)
-
-   local real_hand = G.hand.cards
-   G.hand.cards = DV.SIM.get_unhighlighted_cards()
-
-   local play_to_simulate = DV.deep_copy(G.hand.highlighted)
-   DV.SIM.set_parameters(play_to_simulate)
 
    -- Run evaluation if hand is not debuffed:
    if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name) then
@@ -45,15 +60,15 @@ function DV.SIM.simulate()
       DV.SIM.eval_deck_effect()
    end
 
-   G.GAME.pseudorandom = real_rand
-   G.jokers.cards = real_jokers
    G.hand.cards = real_hand
+   G.jokers.cards = real_jokers
+   G.GAME.pseudorandom = real_rand
 
    return math.floor(DV.SIM.chips * DV.SIM.mult) or 0
 end
 
 --
--- CORE:
+-- CORE FUNCTIONS:
 --
 
 function DV.SIM.eval_scoring_hand()
@@ -238,16 +253,6 @@ function DV.SIM.get_scoring_hand(played_cards, scoring_hand)
 
    table.sort(scoring_hand, function (a, b) return a.T.x < b.T.x end )
    return scoring_hand
-end
-
-function DV.SIM.get_unhighlighted_cards()
-   local sim_hand = {}
-   for _, sim_card in ipairs(DV.deep_copy(G.hand.cards)) do
-      if not sim_card.highlighted then
-         table.insert(sim_hand, sim_card)
-      end
-   end
-   return sim_hand
 end
 
 function DV.SIM.set_parameters(played_cards)
