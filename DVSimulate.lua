@@ -8,13 +8,15 @@ if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
 
 -- These jokers have side-effects that should not be simulated:
--- Some of these also provide a range of values (eg. Misprint), so they are also ignored to simulate worst case scenario.
-DV.SIM.IGNORED = {"Misprint", "Bloodstone", "8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Burnt Joker"}
+DV.SIM.IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Burnt Joker"}
 
 -- Run simulation:
 -- Returns total score from currently selected hand.
 function DV.SIM.simulate()
    if #G.hand.highlighted == 0 then return 0 end
+
+   local real_rand = G.GAME.pseudorandom
+   G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
 
    local real_jokers = G.jokers.cards
    G.jokers.cards = DV.deep_copy(G.jokers.cards)
@@ -31,18 +33,19 @@ function DV.SIM.simulate()
       local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
       DV.SIM.mult = mod_mult(hand_info.mult)
       DV.SIM.chips = mod_chips(hand_info.chips)
-      -- 1. Blind:
+      -- 1. Effects from BLIND:
       DV.SIM.eval_blind_effect()
-      -- 2. Scoring cards in played hand, and per-card joker effects:
+      -- 2. Effects from SCORING CARDS (in played hand), and per-card joker effects:
       DV.SIM.eval_scoring_hand()
-      -- 3. Cards held in hand, and per-held-card joker effects:
+      -- 3. Effects from CARDS HELD IN HAND, and per-held-card joker effects:
       DV.SIM.eval_inhand_effects()
-      -- 4. Global joker effects:
+      -- 4. Effects from JOKERS (global, not per-card):
       DV.SIM.eval_joker_effects()
-      -- 5. Deck:
+      -- 5. Effects from DECK:
       DV.SIM.eval_deck_effect()
    end
 
+   G.GAME.pseudorandom = real_rand
    G.jokers.cards = real_jokers
    G.hand.cards = real_hand
 
@@ -197,8 +200,14 @@ function DV.SIM.eval_joker_effects()
 end
 
 function DV.SIM.eval_deck_effect()
-   local nu_chip, nu_mult = G.GAME.selected_back:trigger_effect{context = 'final_scoring_step', chips = DV.SIM.chips, mult = DV.SIM.mult}
-   DV.SIM.mult, DV.SIM.chips = mod_mult(nu_mult or DV.SIM.mult), mod_chips(nu_chip or DV.SIM.chips)
+   if G.GAME.selected_back.name == 'Plasma Deck' then
+      -- Just avoiding animations here
+      local sum = DV.SIM.mult + DV.SIM.chips
+      DV.SIM.mult, DV.SIM.chips = mod_mult(math.floor(sum/2)), mod_mult(math.floor(sum/2))
+   else
+      local nu_chip, nu_mult = G.GAME.selected_back:trigger_effect{context = 'final_scoring_step', chips = DV.SIM.chips, mult = DV.SIM.mult}
+      DV.SIM.mult, DV.SIM.chips = mod_mult(nu_mult or DV.SIM.mult), mod_chips(nu_chip or DV.SIM.chips)
+   end
 end
 
 function DV.SIM.eval_blind_effect()
