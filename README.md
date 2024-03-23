@@ -1,6 +1,6 @@
 <h1 align="center">Divvy's Preview for Balatro</h1>
 
-<p align="center"><img src="DVPreview_Demo-1.png" style="width:80%" /></p>
+<p align="center"><img src="DVPreview_Demo-1.gif" style="width:80%" /></p>
 
 <p align="center">
 <b>Simulate the score you will get on the selected cards!</b>
@@ -22,12 +22,12 @@
 
 ## See It In Action
 
-<p align="center"><img src="DVPreview_Demo-2.png" style="width:80%" /></p>
+<p align="center"><img src="DVPreview_Demo-2.gif" style="width:80%" /></p>
 <p align="center">Demonstration for viewing the score when some cards are face-down.</p>
 
 &nbsp;
 
-<p align="center"><img src="DVPreview_Demo-3.png" style="width:80%" /></p>
+<p align="center"><img src="DVPreview_Demo-3.gif" style="width:80%" /></p>
 <p align="center">Demonstration for the score changing in real-time.</p>
 
 ## Use My Simulation!
