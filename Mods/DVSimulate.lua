@@ -5,15 +5,11 @@
 --- MOD_DESCRIPTION: A utility mod to simulate selected hand.
 
 if not DV then DV = {} end
-if not DV.SIM then DV.SIM = {} end
 
---
--- CONFIGURATION:
---
-
--- These jokers have side-effects that should not be simulated,
--- because their effects are inconsequential to scoring:
-DV.SIM.IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Burnt Joker", "Superposition"}
+DV.SIM = {
+   -- The following jokers have side-effects that should not be simulated, such as creating consumables.
+   IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Superposition"}
+}
 
 --
 -- MAIN FUNCTION:
