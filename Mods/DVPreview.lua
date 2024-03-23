@@ -11,6 +11,7 @@ DV.PRE = {
    enabled = true,
    hide_face_down = true,
    joker_order = {},
+   hand_order = {},
 }
 
 local orig_start = Game.start_run
@@ -25,6 +26,12 @@ end
 --
 
 function DV.PRE.simulate()
+   -- Guard against simulating in redundant places:
+   if not (G.STATE == G.STATES.SELECTING_HAND or
+           G.STATE == G.STATES.DRAW_TO_HAND or
+           G.STATE == G.STATES.PLAY_TAROT)
+   then return 0 end
+
    if DV.PRE.hide_face_down then
       for _, card in ipairs(G.hand.highlighted) do
          if card.facing == "back" then return nil end
@@ -76,33 +83,42 @@ end
 local orig_update = CardArea.update
 function CardArea:update(dt)
    orig_update(self, dt)
-   DV.PRE.update_on_joker_order_change(self)
+   DV.PRE.update_on_card_order_change(self)
 end
 
-function DV.PRE.update_on_joker_order_change(cardarea)
-   -- Ensure that cardarea contains jokers, and only proceed if it has cards (ie. jokers);
-   -- note that the consumables cardarea also has type 'joker' so must verify by checking first card.
-   if #cardarea.cards == 0 or
-      cardarea.config.type ~= 'joker' or
-      cardarea.cards[1].ability.set ~= 'Joker'
-   then
+function DV.PRE.update_on_card_order_change(cardarea)
+   if #cardarea.cards == 0 then return end
+
+   local prev_order = nil
+   if cardarea.config.type == 'joker' or cardarea.cards[1].ability.set == 'Joker' then
+      -- Note that the consumables cardarea also has type 'joker' so must verify by checking first card.
+      prev_order = DV.PRE.joker_order
+   elseif cardarea.config.type == 'hand' then
+      prev_order = DV.PRE.hand_order
+   else
       return
    end
 
-   -- Go through stored joker names (ordered) and check against current jokers, in-order.
+   -- Go through stored card IDs and check against current card IDs, in-order.
    -- If any mismatch occurs, toggle flag and update name for next time.
    local should_update = false
-   if #cardarea.cards ~= #DV.PRE.joker_order then
-      DV.PRE.joker_order = {}
+   if #cardarea.cards ~= #prev_order then
+      prev_order = {}
    end
-   for i, j in ipairs(cardarea.cards) do
-      if j.ability.name ~= DV.PRE.joker_order[i] then
-         DV.PRE.joker_order[i] = j.ability.name
+   for i, c in ipairs(cardarea.cards) do
+      if c.sort_id ~= prev_order[i] then
+         prev_order[i] = c.sort_id
          should_update = true
       end
    end
 
    if should_update then
+      if cardarea.config.type == 'joker' or cardarea.cards[1].ability.set == 'Joker' then
+         DV.PRE.joker_order = prev_order
+      elseif cardarea.config.type == 'hand' then
+         DV.PRE.hand_order = prev_order
+      end
+
       DV.PRE.add_update_event("immediate")
    end
 end
