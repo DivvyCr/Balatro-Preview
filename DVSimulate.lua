@@ -42,14 +42,17 @@ function DV.SIM.run(played_cards, held_cards, jokers)
    local real_rand = G.GAME.pseudorandom
    G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
 
+   -- Account for any forced changes before evaluation even begins:
+   -- Refer to G.FUNCS.play_cards_from_highlighted(); must simulate the whole sequence of events.
+   DV.SIM.prep_before_play()
+
    -- Run evaluation if hand is not debuffed:
-   if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name) then
-      -- 0. 'Before' effects from JOKERS (eg. levelling-up Spare Trousers):
+   -- The last argument to debuff_hand() signifies that it is a CHECK, and doesn't update effects!
+   if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name, true) then
+      -- 0. Effects from JOKERS that will run BEFORE evaluation (eg. levelling Spare Trousers):
       DV.SIM.eval_before_effects()
-      -- Set mult and chips to base hand values (with level):
-      local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
-      DV.SIM.mult = mod_mult(hand_info.mult)
-      DV.SIM.chips = mod_chips(hand_info.chips)
+      -- 1. Set mult and chips to base hand values:
+      DV.SIM.init_chips_mult()
       -- 1. Effects from BLIND:
       DV.SIM.eval_blind_effect()
       -- 2. Effects from SCORING CARDS (in played hand), and per-card joker effects:
@@ -235,6 +238,28 @@ end
 function DV.SIM.eval_before_effects()
    for _, joker in ipairs(G.jokers.cards) do
       DV.SIM.eval_card(joker, DV.SIM.get_context(G.jokers, {before = true}))
+   end
+end
+
+function DV.SIM.prep_before_play()
+   if G.GAME.blind.name == "The Hook" then
+      for i = 1, math.min(2, #G.hand.cards) do
+         local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
+         table.remove(G.hand.cards, card_key)
+      end
+   end
+end
+
+function DV.SIM.init_chips_mult()
+   local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
+   if G.GAME.blind.name == "The Arm" then
+      -- Account for -1 level:
+      DV.SIM.mult = mod_mult(math.max(1, hand_info.mult - hand_info.l_mult))
+      DV.SIM.chips = mod_chips(math.max(0, hand_info.chips - hand_info.l_chips))
+   else
+      -- Default:
+      DV.SIM.mult = mod_mult(hand_info.mult)
+      DV.SIM.chips = mod_chips(hand_info.chips)
    end
 end
 

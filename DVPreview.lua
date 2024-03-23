@@ -122,9 +122,11 @@ function G.FUNCS.evaluate_play(e)
 end
 
 local orig_discard = G.FUNCS.discard_cards_from_highlighted
-function G.FUNCS.discard_cards_from_highlighted(e, hook)
-   orig_discard(e, hook)
-   DV.PRE.add_reset_event("immediate")
+function G.FUNCS.discard_cards_from_highlighted(e, is_hook_blind)
+   orig_discard(e, is_hook_blind)
+   if not is_hook_blind then
+      DV.PRE.add_reset_event("immediate")
+   end
 end
 
 --
