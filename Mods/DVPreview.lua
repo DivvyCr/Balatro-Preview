@@ -87,10 +87,15 @@ function CardArea:update(dt)
 end
 
 function DV.PRE.update_on_card_order_change(cardarea)
-   if #cardarea.cards == 0 then return end
+   if #cardarea.cards == 0 or
+      not (G.STATE == G.STATES.SELECTING_HAND or
+           G.STATE == G.STATES.DRAW_TO_HAND or
+           G.STATE == G.STATES.PLAY_TAROT)
+   then return end
+   -- Important not to update on G.STATES.HAND_PLAYED, because it would reset the preview text!
 
    local prev_order = nil
-   if cardarea.config.type == 'joker' or cardarea.cards[1].ability.set == 'Joker' then
+   if cardarea.config.type == 'joker' and cardarea.cards[1].ability.set == 'Joker' then
       -- Note that the consumables cardarea also has type 'joker' so must verify by checking first card.
       prev_order = DV.PRE.joker_order
    elseif cardarea.config.type == 'hand' then
