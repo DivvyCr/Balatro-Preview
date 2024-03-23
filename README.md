@@ -10,7 +10,7 @@
 
  0. Install [Steamodded](https://github.com/Steamopollys/Steamodded)
  1. Download the latest release of this mod, [here](https://github.com/DivvyCr/dv-balatro/releases).
- 2. Move the downloaded files to `C:\Users\[USER]\AppData\Roaming\Balatro\Mods\`
+ 2. Copy the downloaded folder to `C:\Users\[USER]\AppData\Roaming\Balatro\`
  3. Launch the game!
 
 ## Features
@@ -29,6 +29,11 @@
 
 <p align="center"><img src="DVPreview_Demo-3.gif" style="width:80%" /></p>
 <p align="center">Demonstration for the score changing in real-time.</p>
+
+&nbsp;
+
+<p align="center"><img src="DVPreview_Demo-4.gif" style="width:80%" /></p>
+<p align="center">Demonstration for the score changing in real-time, again.</p>
 
 ## Use My Simulation!
 
