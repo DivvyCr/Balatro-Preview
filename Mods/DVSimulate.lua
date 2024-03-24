@@ -41,9 +41,13 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
    else
       for x = 1, 2 do
          DV.SIM.TYPE = (x == 1 and -1 or 1)
+
          -- Simulate both extremes: 0 when x=1, 1e9 when x=2:
+         local probability = G.GAME.probabilities.normal
          G.GAME.probabilities.normal = (x-1) * 1e9
          DV.SIM.eval(played_cards, held_cards, jokers, deck)
+         G.GAME.probabilities.normal = probability
+
          if DV.SIM.TYPE == -1 then ret.min = DV.SIM.get_total() end
          if DV.SIM.TYPE ==  1 then ret.max = DV.SIM.get_total() end
       end
@@ -358,8 +362,6 @@ function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
    DVSO.rand = G.GAME.pseudorandom
    G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
 
-   DVSO.prob = G.GAME.probabilities.normal
-
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    DVSO.hands_played = hand_info.played
    DVSO.hands_played_round = hand_info.played_this_round
@@ -378,7 +380,6 @@ function DV.SIM.restore_state()
    G.jokers.cards = DVSO.jokers
    G.deck = DVSO.deck
    G.GAME.pseudorandom = DVSO.rand
-   G.GAME.probabilities.normal = DVSO.prob
    local hand_name = DV.SIM.data.scoring_name
    G.GAME.hands[hand_name].played = DVSO.hands_played
    G.GAME.hands[hand_name].played_this_round = DVSO.hands_played_round
