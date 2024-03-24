@@ -12,7 +12,7 @@ DV.PRE = {
    hide_face_down = true,
    show_min_max = false,
    joker_order = {},
-   hand_order = {},
+   hand_order = {}
 }
 
 local orig_start = Game.start_run
@@ -31,7 +31,7 @@ function DV.PRE.simulate()
    if not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
            G.STATE == G.STATES.PLAY_TAROT)
-   then return 0 end
+   then return {min = 0, exact = 0, max = 0} end
 
    if DV.PRE.hide_face_down then
       for _, card in ipairs(G.hand.highlighted) do
@@ -80,11 +80,13 @@ function CardArea:parse_highlighted()
    DV.PRE.add_update_event("immediate")
 end
 
--- Update simulation after joker or consumable is sold:
+-- Update simulation after joker sold:
 local orig_card_remove = Card.remove_from_area
 function Card:remove_from_area()
    orig_card_remove(self)
-   DV.PRE.add_update_event("after")
+   if self.config.type == 'joker' then
+      DV.PRE.add_update_event("immediate")
+   end
 end
 
 -- Update simulation after joker reordering:
