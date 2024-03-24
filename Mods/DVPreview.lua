@@ -80,6 +80,13 @@ function CardArea:parse_highlighted()
    DV.PRE.add_update_event("immediate")
 end
 
+-- Update simulation after joker or consumable is sold:
+local orig_card_remove = Card.remove_from_area
+function Card:remove_from_area()
+   orig_card_remove(self)
+   DV.PRE.add_update_event("after")
+end
+
 -- Update simulation after joker reordering:
 local orig_update = CardArea.update
 function CardArea:update(dt)
@@ -88,8 +95,6 @@ function CardArea:update(dt)
 end
 
 function DV.PRE.update_on_card_order_change(cardarea)
-   -- TODO: Account for the case where last joker is sold.
-   -- (ie. #cardarea.cards is changed 1 -> 0)
    if #cardarea.cards == 0 or
       not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
