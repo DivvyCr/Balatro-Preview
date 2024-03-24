@@ -33,22 +33,17 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
 
    local play_to_simulate = DV.deep_copy(played_cards)
    DV.SIM.set_parameters(play_to_simulate)
-   DV.SIM.save_state(played_cards, held_cards, jokers, deck)
 
    if not is_minmax then
       DV.SIM.TYPE = 0
-      DV.SIM.eval()
+      DV.SIM.eval(played_cards, held_cards, jokers, deck)
       ret.exact = DV.SIM.get_total()
    else
       for x = 1, 2 do
          DV.SIM.TYPE = (x == 1 and -1 or 1)
-         if x == 2 then
-            -- Restore after evaluation is a reference, so must ensure it doesn't get cobbled:
-            G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
-         end
          -- Simulate both extremes: 0 when x=1, 1e9 when x=2:
          G.GAME.probabilities.normal = (x-1) * 1e9
-         DV.SIM.eval()
+         DV.SIM.eval(played_cards, held_cards, jokers, deck)
          if DV.SIM.TYPE == -1 then ret.min = DV.SIM.get_total() end
          if DV.SIM.TYPE ==  1 then ret.max = DV.SIM.get_total() end
       end
@@ -61,7 +56,9 @@ end
 -- CORE FUNCTIONS:
 --
 
-function DV.SIM.eval()
+function DV.SIM.eval(played_cards, held_cards, jokers, deck)
+   DV.SIM.save_state(played_cards, held_cards, jokers, deck)
+
    -- Account for any forced changes before evaluation even begins:
    -- Refer to G.FUNCS.play_cards_from_highlighted(); must simulate the whole sequence of events.
    DV.SIM.prep_before_play()
@@ -266,7 +263,6 @@ function DV.SIM.prep_before_play()
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    hand_info.played = hand_info.played + 1
    hand_info.played_this_round = hand_info.played_this_round + 1
-
    G.GAME.current_round.hands_left = G.GAME.current_round.hands_left - 1
 
    G.GAME.blind.triggered = false
