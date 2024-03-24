@@ -7,6 +7,8 @@
 if not DV then DV = {} end
 
 DV.SIM = {
+   -- Type is either -1 for min, 0 for exact, or 1 for max:
+   TYPE = 0,
    -- Table for saving and restoring game state:
    ORIG = {},
    -- Any joker names in the following array will be ignored by the simulation:
@@ -34,15 +36,21 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
    DV.SIM.save_state(played_cards, held_cards, jokers, deck)
 
    if not is_minmax then
+      DV.SIM.TYPE = 0
       DV.SIM.eval()
       ret.exact = DV.SIM.get_total()
    else
       for x = 1, 2 do
-         -- Simulate both extremes: 0 when x=1, math.huge when x=2:
-         G.GAME.probabilities.normal = (x-1) * 100000
+         DV.SIM.TYPE = (x == 1 and -1 or 1)
+         if x == 2 then
+            -- Restore after evaluation is a reference, so must ensure it doesn't get cobbled:
+            G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
+         end
+         -- Simulate both extremes: 0 when x=1, 1e9 when x=2:
+         G.GAME.probabilities.normal = (x-1) * 1e9
          DV.SIM.eval()
-         if x == 1 then ret.min = DV.SIM.get_total() end
-         if x == 2 then ret.max = DV.SIM.get_total() end
+         if DV.SIM.TYPE == -1 then ret.min = DV.SIM.get_total() end
+         if DV.SIM.TYPE ==  1 then ret.max = DV.SIM.get_total() end
       end
    end
 
@@ -204,6 +212,12 @@ function DV.SIM.eval_joker_effects()
       -- Evaluate overarching effects of current jokers (not tied to individual cards):
       local effects = eval_card(_card, DV.SIM.get_context(G.jokers, {joker_main = true}))
       if effects.jokers then
+         if _card.ability.name == "Misprint" then
+            -- Adjust Misprint's mult effect for Min-Max simulations:
+            if DV.SIM.TYPE == -1 then effects.jokers.mult_mod = _card.ability.extra.min end
+            if DV.SIM.TYPE == 1 then effects.jokers.mult_mod = _card.ability.extra.max end
+         end
+
          if effects.jokers.chip_mod then DV.SIM.add_chips(effects.jokers.chip_mod) end
          if effects.jokers.mult_mod then DV.SIM.add_mult(effects.jokers.mult_mod) end
          if effects.jokers.Xmult_mod then DV.SIM.x_mult(effects.jokers.Xmult_mod) end
