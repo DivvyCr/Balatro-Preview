@@ -16,7 +16,7 @@ DV.PRE = {
 
 local orig_start = Game.start_run
 function Game:start_run(args)
-   orig_start(self)
+   orig_start(self, args)
    self.GAME.current_round.current_hand.simulated_score = 0
    self.GAME.current_round.current_hand.preview_text = "0"
 end
