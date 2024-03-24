@@ -9,8 +9,8 @@ if not DV then DV = {} end
 DV.SIM = {
    -- Table for saving and restoring game state:
    ORIG = {},
-   -- The following jokers have side-effects that should not be simulated, such as creating consumables.
-   IGNORED = {"8 Ball", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Superposition"}
+   -- Any joker names in the following array will be ignored by the simulation:
+   IGNORED = {--[["Vagabond"]]}
 }
 
 --
@@ -70,7 +70,7 @@ function DV.SIM.eval_scoring_hand()
          local reps = {1}
 
          -- Collect repetitions from red seals:
-         local eval = DV.SIM.eval_card(scoring_card, DV.SIM.get_context(G.play, {repetition = true, repetition_only = true}))
+         local eval = eval_card(scoring_card, DV.SIM.get_context(G.play, {repetition = true, repetition_only = true}))
          if next(eval) then
             for h = 1, eval.seals.repetitions do
                reps[#reps+1] = eval
@@ -79,7 +79,7 @@ function DV.SIM.eval_scoring_hand()
 
          -- Collect repetitions from jokers:
          for _, joker in ipairs(G.jokers.cards) do
-            local eval = DV.SIM.eval_card(joker, DV.SIM.get_context(G.play, {other_card = scoring_card, repetition = true}))
+            local eval = eval_card(joker, DV.SIM.get_context(G.play, {other_card = scoring_card, repetition = true}))
             if next(eval) and eval.jokers then
                for h = 1, eval.jokers.repetitions do
                   reps[#reps+1] = eval
@@ -91,9 +91,9 @@ function DV.SIM.eval_scoring_hand()
          for j=1, #reps do
             -- Evaluation:
             local context = {cardarea = G.play, full_hand = DV.SIM.data.played_cards, scoring_hand = DV.SIM.data.scoring_hand, poker_hand = DV.SIM.data.scoring_name}
-            local effects = {DV.SIM.eval_card(scoring_card, context)}
+            local effects = {eval_card(scoring_card, context)}
             for _, joker in ipairs(G.jokers.cards) do
-               local eval = DV.SIM.eval_joker(joker, DV.SIM.get_context(G.play, {other_card = scoring_card, individual = true}))
+               local eval = joker:calculate_joker(DV.SIM.get_context(G.play, {other_card = scoring_card, individual = true}))
                if eval then table.insert(effects, eval) end
             end
             scoring_card.lucky_trigger = nil
@@ -131,18 +131,18 @@ function DV.SIM.eval_inhand_effects()
       local reps = {1}
       local j = 1
       while j <= #reps do
-         local effects = {DV.SIM.eval_card(held_card, DV.SIM.get_context(G.hand, {}))}
+         local effects = {eval_card(held_card, DV.SIM.get_context(G.hand, {}))}
 
          -- Collect effects on this card from current jokers:
          for _, joker in ipairs(G.jokers.cards) do
-            local eval = DV.SIM.eval_joker(joker, DV.SIM.get_context(G.hand, {other_card = held_card, individual = true}))
+            local eval = joker:calculate_joker(DV.SIM.get_context(G.hand, {other_card = held_card, individual = true}))
             if eval then table.insert(effects, eval) end
          end
 
          -- Collect repetitions:
          if reps[j] == 1 then
             -- Collect repetitions from red seal (in-hand):
-            local eval = DV.SIM.eval_card(held_card, DV.SIM.get_context(G.hand, {repetition = true, repetition_only = true, card_effects = effects}))
+            local eval = eval_card(held_card, DV.SIM.get_context(G.hand, {repetition = true, repetition_only = true, card_effects = effects}))
             if next(eval) and (next(effects[1]) or #effects > 1) then
                for h = 1, eval.seals.repetitions do
                   reps[#reps+1] = eval
@@ -151,7 +151,7 @@ function DV.SIM.eval_inhand_effects()
 
             -- Collect repetitions from jokers (in-hand):
             for _, joker in ipairs(G.jokers.cards) do
-               local eval = DV.SIM.eval_card(joker, DV.SIM.get_context(G.hand, {other_card = held_card, repetition = true, card_effects = effects}))
+               local eval = eval_card(joker, DV.SIM.get_context(G.hand, {other_card = held_card, repetition = true, card_effects = effects}))
                if next(eval) then
                   for h = 1, eval.jokers.repetitions do
                      reps[#reps+1] = eval
@@ -175,7 +175,7 @@ function DV.SIM.eval_joker_effects()
       local _card = G.jokers.cards[i] or G.consumeables.cards[i - #G.jokers.cards]
 
       -- Apply EDITION EFFECTS of current jokers (ie. foil, holographic):
-      local edition_effects = DV.SIM.eval_card(_card, DV.SIM.get_context(G.jokers, {edition = true}))
+      local edition_effects = eval_card(_card, DV.SIM.get_context(G.jokers, {edition = true}))
       if edition_effects.jokers then
          edition_effects.jokers.edition = true
          if edition_effects.jokers.chip_mod then DV.SIM.add_chips(edition_effects.jokers.chip_mod) end
@@ -183,7 +183,7 @@ function DV.SIM.eval_joker_effects()
       end
 
       -- Evaluate overarching effects of current jokers (not tied to individual cards):
-      local effects = DV.SIM.eval_card(_card, DV.SIM.get_context(G.jokers, {joker_main = true}))
+      local effects = eval_card(_card, DV.SIM.get_context(G.jokers, {joker_main = true}))
       if effects.jokers then
          if effects.jokers.chip_mod then DV.SIM.add_chips(effects.jokers.chip_mod) end
          if effects.jokers.mult_mod then DV.SIM.add_mult(effects.jokers.mult_mod) end
@@ -192,7 +192,7 @@ function DV.SIM.eval_joker_effects()
 
       -- Evaluate joker-on-joker effects of current jokers:
       for _, joker in ipairs(G.jokers.cards) do
-         local effect = joker:calculate_joker{full_hand = DV.SIM.data.played_cards, scoring_hand = DV.SIM.data.scoring_hand, scoring_name = DV.SIM.data.scoring_name, poker_hands = DV.SIM.data.poker_hands, other_joker = _card}
+		 local effect = joker:calculate_joker({full_hand = DV.SIM.data.played_cards, scoring_hand = DV.SIM.data.scoring_hand, scoring_name = DV.SIM.data.scoring_name, poker_hands = DV.SIM.data.poker_hands, other_joker = _card})
          if effect then
             if effect.chip_mod then DV.SIM.add_chips(effect.chip_mod) end
             if effect.mult_mod then DV.SIM.add_mult(effect.mult_mod) end
@@ -225,7 +225,7 @@ end
 
 function DV.SIM.eval_before_effects()
    for _, joker in ipairs(G.jokers.cards) do
-      DV.SIM.eval_card(joker, DV.SIM.get_context(G.jokers, {before = true}))
+      eval_card(joker, DV.SIM.get_context(G.jokers, {before = true}))
    end
 end
 
@@ -334,6 +334,9 @@ function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
    DVSO.hands_played_round = hand_info.played_this_round
 
    DVSO.hands_left = G.GAME.current_round.hands_left
+
+   -- Prevent consumeables from being created:
+   G.GAME.consumeable_buffer = math.huge
 end
 
 function DV.SIM.restore_state()
@@ -347,6 +350,9 @@ function DV.SIM.restore_state()
    G.GAME.hands[hand_name].played = DVSO.hands_played
    G.GAME.hands[hand_name].played_this_round = DVSO.hands_played_round
    G.GAME.current_round.hands_left = DVSO.hands_left
+
+   -- Any bugs with consumable-creation might be solved by placing this in an after-event:
+   G.GAME.consumeable_buffer = 0
 end
 
 function DV.SIM.add_chips(chips)
@@ -361,20 +367,26 @@ function DV.SIM.x_mult(x)
    DV.SIM.mult = mod_mult(DV.SIM.mult * x)
 end
 
--- Evaluates all cards except IGNORED jokers:
-function DV.SIM.eval_card(card, context)
-   if (card.ability.set == "Joker") and DV.contains(card.ability.name, DV.SIM.IGNORED) then
-      return {}
-   end
-   return eval_card(card, context)
+--
+-- CARD EVALUATION ADVICE:
+--
+
+local orig_eval_card = eval_card
+function eval_card(card, context)
+   -- Breaks with joker-on-joker effects:
+   -- if (card.ability.set == "Joker") and DV.contains(card.ability.name, DV.SIM.IGNORED) then
+   -- 	  return {}
+   -- end
+   return orig_eval_card(card, context)
 end
 
--- Evaluates jokers via Card:calculate_joker(..) except IGNORED jokers:
-function DV.SIM.eval_joker(joker, context)
-   if DV.contains(joker.ability.name, DV.SIM.IGNORED) then
-      return {}
-   end
-   return joker:calculate_joker(context)
+local orig_eval_joker = Card.calculate_joker
+function Card:calculate_joker(context)
+   -- Breaks with joker-on-joker effects:
+   -- if DV.contains(self.ability.name, DV.SIM.IGNORED) then
+   -- 	  return {}
+   -- end
+   return orig_eval_joker(self, context)
 end
 
 --
