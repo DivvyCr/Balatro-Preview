@@ -7,6 +7,8 @@
 if not DV then DV = {} end
 
 DV.SIM = {
+   -- Table for saving and restoring game state:
+   ORIG = {},
    -- The following jokers have side-effects that should not be simulated, such as creating consumables.
    IGNORED = {"8 Ball", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Superposition"}
 }
@@ -28,18 +30,7 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck)
 
    local play_to_simulate = DV.deep_copy(played_cards)
    DV.SIM.set_parameters(play_to_simulate)
-
-   local real_hand = G.hand.cards
-   G.hand.cards = DV.deep_copy(held_cards)
-
-   local real_jokers = G.jokers.cards
-   G.jokers.cards = DV.deep_copy(jokers)
-
-   local real_deck = G.deck
-   G.deck = DV.deep_copy(deck)
-
-   local real_rand = G.GAME.pseudorandom
-   G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
+   DV.SIM.save_state(played_cards, held_cards, jokers, deck)
 
    -- Account for any forced changes before evaluation even begins:
    -- Refer to G.FUNCS.play_cards_from_highlighted(); must simulate the whole sequence of events.
@@ -64,10 +55,7 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck)
       DV.SIM.eval_deck_effect()
    end
 
-   G.hand.cards = real_hand
-   G.jokers.cards = real_jokers
-   G.deck = real_deck
-   G.GAME.pseudorandom = real_rand
+   DV.SIM.restore_state()
 
    return math.floor(DV.SIM.chips * DV.SIM.mult) or 0
 end
@@ -289,14 +277,14 @@ function DV.SIM.get_scoring_hand(played_cards, scoring_hand)
 end
 
 function DV.SIM.set_parameters(played_cards)
-   local text, _, poker_hands, scoring_hand, _ = G.FUNCS.get_poker_hand_info(played_cards)
+   local hand_name, _, poker_hands, scoring_hand, _ = G.FUNCS.get_poker_hand_info(played_cards)
 
    DV.SIM.chips = mod_chips(0)
    DV.SIM.mult = mod_mult(0)
 
    DV.SIM.data = {
       played_cards = played_cards,
-      scoring_name = text,
+      scoring_name = hand_name,
       scoring_hand = DV.SIM.get_scoring_hand(played_cards, scoring_hand),
       poker_hands = poker_hands,
    }
@@ -316,6 +304,43 @@ function DV.SIM.set_parameters(played_cards)
 
       return context
    end
+end
+
+function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
+   local DVSO = DV.SIM.ORIG
+
+   DVSO.hand = G.hand.cards
+   G.hand.cards = DV.deep_copy(held_cards)
+
+   DVSO.jokers = G.jokers.cards
+   G.jokers.cards = DV.deep_copy(jokers)
+
+   DVSO.deck = G.deck
+   G.deck = DV.deep_copy(deck)
+
+   DVSO.rand = G.GAME.pseudorandom
+   G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
+
+   DVSO.dollars = G.GAME.dollars
+
+   local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
+   DVSO.hands_played = hand_info.played
+   DVSO.hands_played_round = hand_info.played_this_round
+   -- Need to update for jokers like Card Sharp:
+   hand_info.played = hand_info.played + 1
+   hand_info.played_this_round = hand_info.played_this_round + 1
+end
+
+function DV.SIM.restore_state()
+   local DVSO = DV.SIM.ORIG
+   G.hand.cards = DVSO.hand
+   G.jokers.cards = DVSO.jokers
+   G.deck = DVSO.deck
+   G.GAME.pseudorandom = DVSO.rand
+   G.GAME.dollars = DVSO.dollars
+   local hand_name = DV.SIM.data.scoring_name
+   G.GAME.hands[hand_name].played = DVSO.hands_played
+   G.GAME.hands[hand_name].played_this_round = DVSO.hands_played_round
 end
 
 function DV.SIM.add_chips(chips)
