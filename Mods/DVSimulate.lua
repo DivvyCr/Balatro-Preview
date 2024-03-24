@@ -66,7 +66,10 @@ end
 
 function DV.SIM.eval_scoring_hand()
    for _, scoring_card in ipairs(DV.SIM.data.scoring_hand) do
-      if not scoring_card.debuff then
+      if scoring_card.debuff then
+         -- Necessary for jokers like Matador
+         G.GAME.blind.triggered = true
+      else
          local reps = {1}
 
          -- Collect repetitions from red seals:
@@ -192,7 +195,7 @@ function DV.SIM.eval_joker_effects()
 
       -- Evaluate joker-on-joker effects of current jokers:
       for _, joker in ipairs(G.jokers.cards) do
-		 local effect = joker:calculate_joker({full_hand = DV.SIM.data.played_cards, scoring_hand = DV.SIM.data.scoring_hand, scoring_name = DV.SIM.data.scoring_name, poker_hands = DV.SIM.data.poker_hands, other_joker = _card})
+         local effect = joker:calculate_joker({full_hand = DV.SIM.data.played_cards, scoring_hand = DV.SIM.data.scoring_hand, scoring_name = DV.SIM.data.scoring_name, poker_hands = DV.SIM.data.poker_hands, other_joker = _card})
          if effect then
             if effect.chip_mod then DV.SIM.add_chips(effect.chip_mod) end
             if effect.mult_mod then DV.SIM.add_mult(effect.mult_mod) end
@@ -235,6 +238,8 @@ function DV.SIM.prep_before_play()
    hand_info.played_this_round = hand_info.played_this_round + 1
 
    G.GAME.current_round.hands_left = G.GAME.current_round.hands_left - 1
+
+   G.GAME.blind.triggered = false
 
    if G.GAME.blind.name == "The Hook" then
       for i = 1, math.min(2, #G.hand.cards) do
@@ -327,8 +332,6 @@ function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
    DVSO.rand = G.GAME.pseudorandom
    G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
 
-   DVSO.dollars = G.GAME.dollars
-
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    DVSO.hands_played = hand_info.played
    DVSO.hands_played_round = hand_info.played_this_round
@@ -337,6 +340,8 @@ function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
 
    -- Prevent consumeables from being created:
    G.GAME.consumeable_buffer = math.huge
+
+   DV.SIM.running = true
 end
 
 function DV.SIM.restore_state()
@@ -345,7 +350,6 @@ function DV.SIM.restore_state()
    G.jokers.cards = DVSO.jokers
    G.deck = DVSO.deck
    G.GAME.pseudorandom = DVSO.rand
-   G.GAME.dollars = DVSO.dollars
    local hand_name = DV.SIM.data.scoring_name
    G.GAME.hands[hand_name].played = DVSO.hands_played
    G.GAME.hands[hand_name].played_this_round = DVSO.hands_played_round
@@ -353,6 +357,8 @@ function DV.SIM.restore_state()
 
    -- Any bugs with consumable-creation might be solved by placing this in an after-event:
    G.GAME.consumeable_buffer = 0
+
+   DV.SIM.running = false
 end
 
 function DV.SIM.add_chips(chips)
@@ -375,7 +381,7 @@ local orig_eval_card = eval_card
 function eval_card(card, context)
    -- Breaks with joker-on-joker effects:
    -- if (card.ability.set == "Joker") and DV.contains(card.ability.name, DV.SIM.IGNORED) then
-   -- 	  return {}
+   --     return {}
    -- end
    return orig_eval_card(card, context)
 end
@@ -384,9 +390,17 @@ local orig_eval_joker = Card.calculate_joker
 function Card:calculate_joker(context)
    -- Breaks with joker-on-joker effects:
    -- if DV.contains(self.ability.name, DV.SIM.IGNORED) then
-   -- 	  return {}
+   --     return {}
    -- end
    return orig_eval_joker(self, context)
+end
+
+-- G.GAME.dollars are only incremented by ease_dollars(..)!
+-- If that changes, need to add G.GAME.dollars to saved state.
+local orig_dollars = ease_dollars
+function ease_dollars(mod, instant)
+   if DV.SIM.running then return end
+   orig_dollars(mod, instant)
 end
 
 --
