@@ -230,6 +230,12 @@ function DV.SIM.eval_before_effects()
 end
 
 function DV.SIM.prep_before_play()
+   local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
+   hand_info.played = hand_info.played + 1
+   hand_info.played_this_round = hand_info.played_this_round + 1
+
+   G.GAME.current_round.hands_left = G.GAME.current_round.hands_left - 1
+
    if G.GAME.blind.name == "The Hook" then
       for i = 1, math.min(2, #G.hand.cards) do
          local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
@@ -326,9 +332,8 @@ function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    DVSO.hands_played = hand_info.played
    DVSO.hands_played_round = hand_info.played_this_round
-   -- Need to update for jokers like Card Sharp:
-   hand_info.played = hand_info.played + 1
-   hand_info.played_this_round = hand_info.played_this_round + 1
+
+   DVSO.hands_left = G.GAME.current_round.hands_left
 end
 
 function DV.SIM.restore_state()
@@ -341,6 +346,7 @@ function DV.SIM.restore_state()
    local hand_name = DV.SIM.data.scoring_name
    G.GAME.hands[hand_name].played = DVSO.hands_played
    G.GAME.hands[hand_name].played_this_round = DVSO.hands_played_round
+   G.GAME.current_round.hands_left = DVSO.hands_left
 end
 
 function DV.SIM.add_chips(chips)
