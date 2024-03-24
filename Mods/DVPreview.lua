@@ -10,6 +10,7 @@ if not DV.SIM then DV.SIM = {} end
 DV.PRE = {
    enabled = true,
    hide_face_down = true,
+   show_min_max = false,
    joker_order = {},
    hand_order = {},
 }
@@ -17,7 +18,7 @@ DV.PRE = {
 local orig_start = Game.start_run
 function Game:start_run(args)
    orig_start(self, args)
-   self.GAME.current_round.current_hand.simulated_score = 0
+   self.GAME.current_round.current_hand.simulated_data = {min = 0, exact = 0, max = 0}
    self.GAME.current_round.current_hand.preview_text = "0"
 end
 
@@ -38,7 +39,7 @@ function DV.PRE.simulate()
       end
    end
 
-   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck)
+   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck, DV.PRE.show_min_max)
 end
 
 function DV.PRE.get_held_cards()
@@ -57,7 +58,7 @@ end
 
 function DV.PRE.add_update_event(trigger)
    function sim_func()
-      G.GAME.current_round.current_hand.simulated_score = DV.PRE.simulate()
+      G.GAME.current_round.current_hand.simulated_data = DV.PRE.simulate()
       return true
    end
    if DV.PRE.enabled then
@@ -87,6 +88,8 @@ function CardArea:update(dt)
 end
 
 function DV.PRE.update_on_card_order_change(cardarea)
+   -- TODO: Account for the case where last joker is sold.
+   -- (ie. #cardarea.cards is changed 1 -> 0)
    if #cardarea.cards == 0 or
       not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
@@ -134,7 +137,7 @@ end
 
 function DV.PRE.add_reset_event(trigger)
    function reset_func()
-      G.GAME.current_round.current_hand.simulated_score = 0
+      G.GAME.current_round.current_hand.simulated_data = {min = 0, exact = 0, max = 0}
       return true
    end
    if DV.PRE.enabled then
@@ -175,8 +178,23 @@ end
 -- Add animation to preview text:
 function G.FUNCS.simulation_UI_set(e)
    local new_preview_text = ""
-   if G.GAME.current_round.current_hand.simulated_score then
-      new_preview_text = number_format(G.GAME.current_round.current_hand.simulated_score)
+   local new_preview_data = G.GAME.current_round.current_hand.simulated_data
+   local value_for_juice = 0
+   if new_preview_data then
+      if DV.PRE.show_min_max then
+         if new_preview_data.min == new_preview_data.max then
+            -- Superficial padding to fake text change, which is a prerequisite for animation update:
+            new_preview_text = " " .. number_format(new_preview_data.min) .. " "
+         else
+            local new_preview_min_text = DV.PRE.format_number(new_preview_data.min)
+            local new_preview_max_text = DV.PRE.format_number(new_preview_data.max)
+            new_preview_text = new_preview_min_text .. " - " .. new_preview_max_text
+         end
+         value_for_juice = new_preview_data.min
+      else
+         new_preview_text = number_format(new_preview_data.exact)
+         value_for_juice = new_preview_data.exact
+      end
    else
       new_preview_text = "????"
    end
@@ -185,8 +203,8 @@ function G.FUNCS.simulation_UI_set(e)
       e.config.object:update_text()
       -- Wobble:
       if not G.TAROT_INTERRUPT_PULSE then
-         local scaled_juice = math.floor(math.log10(type(G.GAME.current_round.current_hand.simulated_score) == 'number' and G.GAME.current_round.current_hand.simulated_score or 1))
-         G.FUNCS.text_super_juice(e, math.max(0, math.min(6, scaled_juice)))
+         local scaled_juice = math.floor(math.log10(type(value_for_juice) == 'number' and value_for_juice or 1))
+         G.FUNCS.text_super_juice(e, math.max(0, math.min(4, scaled_juice)))
       end
    end
 end
@@ -197,19 +215,36 @@ function G.UIDEF.settings_tab(tab)
    function preview_toggle_callback(_)
       if not G.HUD then return end
 
-      if not DV.PRE.enabled then
-         -- Preview was just disabled, so remove preview node:
-         G.HUD:get_UIE_by_ID("dv_sim").parent:remove()
-      else
+      if DV.PRE.enabled then
          -- Preview was just enabled, so add preview node:
          G.HUD:add_child(DV.PRE.get_sim_node(), G.HUD:get_UIE_by_ID("dv_sim_wrap"))
-         G.GAME.current_round.current_hand.simulated_score = DV.PRE.simulate()
+         G.GAME.current_round.current_hand.simulated_data = DV.PRE.simulate()
+      else
+         -- Preview was just disabled, so remove preview node:
+         G.HUD:get_UIE_by_ID("dv_sim").parent:remove()
       end
       G.HUD:recalculate()
    end
 
    function face_down_toggle_callback(_)
-      G.GAME.current_round.current_hand.simulated_score = DV.PRE.simulate()
+      if not G.HUD then return end
+
+      G.GAME.current_round.current_hand.simulated_data = DV.PRE.simulate()
+      G.HUD:recalculate()
+   end
+
+   function minmax_toggle_callback(_)
+      if not G.HUD then return end
+
+      G.GAME.current_round.current_hand.simulated_data = DV.PRE.simulate()
+      if not DV.PRE.show_min_max then
+         -- Min-Max was just disabled, so increase scale:
+         G.HUD:get_UIE_by_ID("dv_sim_text").config.object.scale = 0.75
+      else
+         -- Min-Max was just enabled, so decrease scale:
+         G.HUD:get_UIE_by_ID("dv_sim_text").config.object.scale = 0.5
+      end
+      DV.PRE.force_update_preview_text = true
       G.HUD:recalculate()
    end
 
@@ -217,6 +252,7 @@ function G.UIDEF.settings_tab(tab)
    if tab == 'Game' then
       local preview_setting_nodes = {n = G.UIT.R, config = {align = "cm"}, nodes ={
                                         create_toggle({label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "enabled", callback = preview_toggle_callback}),
+                                        create_toggle({label = "Show Min-Max Score instead of Exact", ref_table = DV.PRE, ref_value = "show_min_max", callback = minmax_toggle_callback}),
                                         create_toggle({label = "Hide Score Preview if Any Card is Face-Down", ref_table = DV.PRE, ref_value = "hide_face_down", callback = face_down_toggle_callback})
                                     }}
       table.insert(contents.nodes, preview_setting_nodes)
@@ -225,7 +261,22 @@ function G.UIDEF.settings_tab(tab)
 end
 
 function DV.PRE.get_sim_node()
+   local text_scale = nil
+   if DV.PRE.show_min_max then text_scale = 0.5
+   else text_scale = 0.75 end
+
    return {n = G.UIT.C, config = {id = "dv_sim", align = "cm"}, nodes={
-              {n=G.UIT.O, config={func = "simulation_UI_set", object = DynaText({string = {{ref_table = G.GAME.current_round.current_hand, ref_value = "preview_text"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = 0.75})}}
+              {n=G.UIT.O, config={id = "dv_sim_text", func = "simulation_UI_set", object = DynaText({string = {{ref_table = G.GAME.current_round.current_hand, ref_value = "preview_text"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}}
    }}
+end
+
+function DV.PRE.format_number(num)
+   if not num or type(num) ~= 'number' then return num or '' end
+   -- Start using e-notation earlier to reduce number length, if showing min and max for preview:
+   if DV.PRE.show_min_max and num >= 1e7 then
+      local x = string.format("%.4g",num)
+      local fac = math.floor(math.log(tonumber(x), 10))
+      return string.format("%.2f",x/(10^fac))..'e'..fac
+   end
+   return number_format(num) -- Default Balatro function.
 end

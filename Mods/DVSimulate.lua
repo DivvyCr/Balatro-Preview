@@ -25,13 +25,35 @@ DV.SIM = {
 -- NOTE: this simulation assumes only vanilla jokers are used,
 --       modded jokers should still work but there will likely be side-effects,
 --       especially if they create/destroy/modify consumables or the deck.
-function DV.SIM.run(played_cards, held_cards, jokers, deck)
-   if #played_cards == 0 then return 0 end
+function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
+   local ret = {min = 0, exact = 0, max = 0}
+   if #played_cards == 0 then return ret end
 
    local play_to_simulate = DV.deep_copy(played_cards)
    DV.SIM.set_parameters(play_to_simulate)
    DV.SIM.save_state(played_cards, held_cards, jokers, deck)
 
+   if not is_minmax then
+      DV.SIM.eval()
+      ret.exact = DV.SIM.get_total()
+   else
+      for x = 1, 2 do
+         -- Simulate both extremes: 0 when x=1, math.huge when x=2:
+         G.GAME.probabilities.normal = (x-1) * 100000
+         DV.SIM.eval()
+         if x == 1 then ret.min = DV.SIM.get_total() end
+         if x == 2 then ret.max = DV.SIM.get_total() end
+      end
+   end
+
+   return ret
+end
+
+--
+-- CORE FUNCTIONS:
+--
+
+function DV.SIM.eval()
    -- Account for any forced changes before evaluation even begins:
    -- Refer to G.FUNCS.play_cards_from_highlighted(); must simulate the whole sequence of events.
    DV.SIM.prep_before_play()
@@ -56,13 +78,7 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck)
    end
 
    DV.SIM.restore_state()
-
-   return math.floor(DV.SIM.chips * DV.SIM.mult) or 0
 end
-
---
--- CORE FUNCTIONS:
---
 
 function DV.SIM.eval_scoring_hand()
    for _, scoring_card in ipairs(DV.SIM.data.scoring_hand) do
@@ -241,6 +257,9 @@ function DV.SIM.prep_before_play()
 
    G.GAME.blind.triggered = false
 
+   DV.SIM.chips = mod_chips(0)
+   DV.SIM.mult = mod_mult(0)
+
    if G.GAME.blind.name == "The Hook" then
       for i = 1, math.min(2, #G.hand.cards) do
          local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
@@ -290,9 +309,6 @@ end
 function DV.SIM.set_parameters(played_cards)
    local hand_name, _, poker_hands, scoring_hand, _ = G.FUNCS.get_poker_hand_info(played_cards)
 
-   DV.SIM.chips = mod_chips(0)
-   DV.SIM.mult = mod_mult(0)
-
    DV.SIM.data = {
       played_cards = played_cards,
       scoring_name = hand_name,
@@ -332,6 +348,8 @@ function DV.SIM.save_state(played_cards, held_cards, jokers, deck)
    DVSO.rand = G.GAME.pseudorandom
    G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
 
+   DVSO.prob = G.GAME.probabilities.normal
+
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    DVSO.hands_played = hand_info.played
    DVSO.hands_played_round = hand_info.played_this_round
@@ -350,6 +368,7 @@ function DV.SIM.restore_state()
    G.jokers.cards = DVSO.jokers
    G.deck = DVSO.deck
    G.GAME.pseudorandom = DVSO.rand
+   G.GAME.probabilities.normal = DVSO.prob
    local hand_name = DV.SIM.data.scoring_name
    G.GAME.hands[hand_name].played = DVSO.hands_played
    G.GAME.hands[hand_name].played_this_round = DVSO.hands_played_round
@@ -371,6 +390,10 @@ end
 
 function DV.SIM.x_mult(x)
    DV.SIM.mult = mod_mult(DV.SIM.mult * x)
+end
+
+function DV.SIM.get_total()
+   return math.floor(DV.SIM.chips * DV.SIM.mult) or 0
 end
 
 --
