@@ -38,7 +38,7 @@ function DV.PRE.simulate()
       end
    end
 
-   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards)
+   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck)
 end
 
 function DV.PRE.get_held_cards()

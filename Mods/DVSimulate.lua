@@ -8,7 +8,7 @@ if not DV then DV = {} end
 
 DV.SIM = {
    -- The following jokers have side-effects that should not be simulated, such as creating consumables.
-   IGNORED = {"8 Ball", "DNA", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Superposition"}
+   IGNORED = {"8 Ball", "Sixth Sense", "Seance", "Vagabond", "Midas Mask", "Superposition"}
 }
 
 --
@@ -23,7 +23,7 @@ DV.SIM = {
 -- NOTE: this simulation assumes only vanilla jokers are used,
 --       modded jokers should still work but there will likely be side-effects,
 --       especially if they create/destroy/modify consumables or the deck.
-function DV.SIM.run(played_cards, held_cards, jokers)
+function DV.SIM.run(played_cards, held_cards, jokers, deck)
    if #played_cards == 0 then return 0 end
 
    local play_to_simulate = DV.deep_copy(played_cards)
@@ -34,6 +34,9 @@ function DV.SIM.run(played_cards, held_cards, jokers)
 
    local real_jokers = G.jokers.cards
    G.jokers.cards = DV.deep_copy(jokers)
+
+   local real_deck = G.deck
+   G.deck = DV.deep_copy(deck)
 
    local real_rand = G.GAME.pseudorandom
    G.GAME.pseudorandom = DV.deep_copy(G.GAME.pseudorandom)
@@ -63,6 +66,7 @@ function DV.SIM.run(played_cards, held_cards, jokers)
 
    G.hand.cards = real_hand
    G.jokers.cards = real_jokers
+   G.deck = real_deck
    G.GAME.pseudorandom = real_rand
 
    return math.floor(DV.SIM.chips * DV.SIM.mult) or 0
