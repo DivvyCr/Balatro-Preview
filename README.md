@@ -17,8 +17,9 @@
 
  - Score preview **without side-effects**!
  - **Updates in real-time** when changing selected cards, changing joker order, or using consumables!
- - Perfectly predicts random effects.
  - Can preview score even when some cards are face-down!
+ - Perfectly **predicts random effects**...
+ - ... or not! There is an option to show the **minimum and maximum possible scores** when probabilities are involved!
 
 ## See It In Action
 
@@ -34,6 +35,11 @@
 
 <p align="center"><img src="DVPreview_Demo-4.gif" style="width:90%" /></p>
 <p align="center">Demonstration for the score changing in real-time, again.</p>
+
+&nbsp;
+
+<p align="center"><img src="DVPreview_Demo-5.gif" style="width:90%" /></p>
+<p align="center">Demonstration for viewing min-max scores<br>under the effects of Business Card with Bull and Bloodstone.</p>
 
 ## Use My Simulation!
 
