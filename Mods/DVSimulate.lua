@@ -264,6 +264,17 @@ function DV.SIM.eval_before_effects()
 end
 
 function DV.SIM.prep_before_play()
+   -- See Blind:press_play()
+   if G.GAME.blind.name == "The Hook" then
+      for i = 1, math.min(2, #G.hand.cards) do
+         local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
+         table.remove(G.hand.cards, card_key)
+         for _, joker in ipairs(G.jokers.cards) do
+            joker:calculate_joker({discard = true, other_card = selected_card, full_hand = DV.SIM.data.played_cards})
+         end
+      end
+   end
+
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    hand_info.played = hand_info.played + 1
    hand_info.played_this_round = hand_info.played_this_round + 1
@@ -273,13 +284,6 @@ function DV.SIM.prep_before_play()
 
    DV.SIM.chips = mod_chips(0)
    DV.SIM.mult = mod_mult(0)
-
-   if G.GAME.blind.name == "The Hook" then
-      for i = 1, math.min(2, #G.hand.cards) do
-         local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
-         table.remove(G.hand.cards, card_key)
-      end
-   end
 end
 
 function DV.SIM.init_chips_mult()
