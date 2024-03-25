@@ -241,7 +241,7 @@ function G.UIDEF.settings_tab(tab)
    end
 
    function minmax_toggle_callback(_)
-      if not G.HUD then return end
+      if not G.HUD or not DV.PRE.enabled then return end
 
       G.GAME.current_round.current_hand.simulated_data = DV.PRE.simulate()
       if not DV.PRE.show_min_max then
