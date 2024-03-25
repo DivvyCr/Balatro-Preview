@@ -182,6 +182,14 @@ function create_UIBox_HUD()
    return contents
 end
 
+function thisManyChipsWillWin(chips)
+   if G.GAME.blind then
+      return G.GAME.chips + chips >= G.GAME.blind.chips
+   else
+      return false
+   end
+end
+
 -- Add animation to preview text:
 function G.FUNCS.simulation_UI_set(e)
    local new_preview_text = ""
@@ -191,15 +199,28 @@ function G.FUNCS.simulation_UI_set(e)
       if DV.PRE.show_min_max then
          if new_preview_data.min == new_preview_data.max then
             -- Superficial padding to fake text change, which is a prerequisite for animation update:
-            new_preview_text = " " .. number_format(new_preview_data.min) .. " "
+            if thisManyChipsWillWin(new_preview_data.min) then
+               new_preview_text = " " .. number_format(new_preview_data.min) .. "* "
+            else
+               new_preview_text = " " .. number_format(new_preview_data.min) .. " "
+            end
          else
             local new_preview_min_text = DV.PRE.format_number(new_preview_data.min)
+            if thisManyChipsWillWin(new_preview_data.min) then
+               new_preview_min_text = new_preview_min_text .. "*"
+            end
             local new_preview_max_text = DV.PRE.format_number(new_preview_data.max)
+            if thisManyChipsWillWin(new_preview_data.max) then
+               new_preview_max_text = new_preview_max_text .. "*"
+            end
             new_preview_text = new_preview_min_text .. " - " .. new_preview_max_text
          end
          value_for_juice = new_preview_data.min
       else
          new_preview_text = number_format(new_preview_data.exact)
+         if thisManyChipsWillWin(new_preview_data.exact) then
+            new_preview_text = new_preview_text .. "*"
+         end
          value_for_juice = new_preview_data.exact
       end
    else
