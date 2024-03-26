@@ -12,7 +12,7 @@ DV.PRE = {
    hide_face_down = true,
    show_min_max = false,
    data = {
-	  min = 0, max = 0,
+	  score = {min = 0, max = 0},
 	  dollars = {min = 0, max = 0}
    },
    text = {
@@ -32,7 +32,8 @@ function DV.PRE.simulate()
    if not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
            G.STATE == G.STATES.PLAY_TAROT)
-   then return {min = 0, max = 0} end
+   then return {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
+   end
 
    if DV.PRE.hide_face_down then
       for _, card in ipairs(G.hand.highlighted) do
@@ -145,7 +146,7 @@ end
 
 function DV.PRE.add_reset_event(trigger)
    function reset_func()
-      DV.PRE.data = {min = 0, max = 0, dollars = {min = 0, max = 0}}
+      DV.PRE.data = {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
       return true
    end
    if DV.PRE.enabled then
@@ -210,25 +211,25 @@ function G.FUNCS.dv_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
    if DV.PRE.data then
-      if DV.PRE.show_min_max then
-		 local has_range = (DV.PRE.data.min ~= DV.PRE.data.max)
+      if DV.PRE.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
+		 -- Format as 'X - Y' :
 		 if e.config.id == "dv_pre_l" then
-			new_preview_text = DV.PRE.format_number(DV.PRE.data.min)
-			if has_range then new_preview_text = new_preview_text .. " - " end
-			if DV.PRE.is_enough_to_win(DV.PRE.data.min) then should_juice = true end
+			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min) .. " - "
+			if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
 		 elseif e.config.id == "dv_pre_r" then
-			if has_range
-			then new_preview_text = DV.PRE.format_number(DV.PRE.data.max)
-			else new_preview_text = ""
-			end
-			if DV.PRE.is_enough_to_win(DV.PRE.data.max) then should_juice = true end
+			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.max)
+			if DV.PRE.is_enough_to_win(DV.PRE.data.score.max) then should_juice = true end
          end
       else
-		 if e.config.id == "dv_pre_l"
-		 then new_preview_text = number_format(DV.PRE.data.min)
-		 else new_preview_text = ""
+		 -- Format as single number:
+		 if e.config.id == "dv_pre_l" then
+			if DV.PRE.show_min_max then new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min)
+			else new_preview_text = number_format(DV.PRE.data.score.min)
+			end
+		 else
+			new_preview_text = ""
 		 end
-		 if DV.PRE.is_enough_to_win(DV.PRE.data.min) then should_juice = true end
+		 if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
       end
    else
       new_preview_text = "????"
