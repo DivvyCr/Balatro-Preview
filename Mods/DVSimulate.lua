@@ -451,7 +451,7 @@ end
 
 local orig_eval_card = eval_card
 function eval_card(card, context)
-   if DV.contains(card.ability.name, DV.SIM.JOKERS_RANDOM) then
+   if DV.SIM.running and DV.contains(card.ability.name, DV.SIM.JOKERS_RANDOM) then
 	  local odds = (type(card.ability.extra) == "number" and card.ability.extra or card.ability.extra.odds)
 	  if G.GAME.probabilities.normal < odds then
 		 local p = G.GAME.probabilities.normal
@@ -475,7 +475,7 @@ end
 
 local orig_eval_joker = Card.calculate_joker
 function Card:calculate_joker(context)
-   if DV.contains(self.ability.name, DV.SIM.JOKERS_RANDOM) then
+   if DV.SIM.running and DV.contains(self.ability.name, DV.SIM.JOKERS_RANDOM) then
 	  local odds = (type(self.ability.extra) == "number" and self.ability.extra or self.ability.extra.odds)
 	  if G.GAME.probabilities.normal < odds then
 		 local p = G.GAME.probabilities.normal
