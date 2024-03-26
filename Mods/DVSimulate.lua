@@ -259,6 +259,21 @@ end
 
 function DV.SIM.eval_before_effects()
    for _, joker in ipairs(G.jokers.cards) do
+	  if joker.ability.name == "Space Joker" then
+		 local should_level = false
+		 if DV.SIM.TYPE == 0 then
+			should_level = pseudorandom("space") < G.GAME.probabilities.normal/joker.ability.extra
+		 elseif DV.SIM.TYPE == 1 then
+			should_level = true
+		 elseif DV.SIM.TYPE == -1 then
+			should_level = (G.GAME.probabilities.normal >= joker.ability.extra)
+		 end
+		 if should_level then
+			local h = G.GAME.hands[DV.SIM.data.scoring_name]
+			DV.SIM.add_chips(h.l_chips)
+			DV.SIM.add_mult(h.l_mult)
+		 end
+	  end
       eval_card(joker, DV.SIM.get_context(G.jokers, {before = true}))
    end
 end
@@ -290,12 +305,12 @@ function DV.SIM.init_chips_mult()
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
    if G.GAME.blind.name == "The Arm" and hand_info.level > 1 then
       -- Account for -1 level:
-      DV.SIM.mult = mod_mult(math.max(1, hand_info.mult - hand_info.l_mult))
-      DV.SIM.chips = mod_chips(math.max(0, hand_info.chips - hand_info.l_chips))
+      DV.SIM.add_mult(math.max(1, hand_info.mult - hand_info.l_mult))
+      DV.SIM.add_chips(math.max(0, hand_info.chips - hand_info.l_chips))
    else
       -- Default:
-      DV.SIM.mult = mod_mult(hand_info.mult)
-      DV.SIM.chips = mod_chips(hand_info.chips)
+      DV.SIM.add_mult(hand_info.mult)
+      DV.SIM.add_chips(hand_info.chips)
    end
 end
 
