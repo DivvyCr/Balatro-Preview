@@ -7,12 +7,23 @@
 if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
 
+if not G.SETTINGS.DV then
+   G.SETTINGS.DV = {}
+   G.SETTINGS.DV.preview_score = true
+   G.SETTINGS.DV.preview_dollars = true
+   G.SETTINGS.DV.hide_face_down = true
+   G.SETTINGS.DV.show_min_max = false
+end
+
 DV.PRE = {
-   enabled = true,
-   hide_face_down = true,
-   show_min_max = false,
-   data = {min = 0, max = 0},
-   text = {l = "", r = ""},
+   data = {
+	  score = {min = 0, max = 0},
+	  dollars = {min = 0, max = 0}
+   },
+   text = {
+	  score = {l = "", r = ""},
+	  dollars = {top = "", bot = ""}
+   },
    joker_order = {},
    hand_order = {}
 }
@@ -26,15 +37,16 @@ function DV.PRE.simulate()
    if not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
            G.STATE == G.STATES.PLAY_TAROT)
-   then return {min = 0, max = 0} end
+   then return {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
+   end
 
-   if DV.PRE.hide_face_down then
+   if G.SETTINGS.DV.hide_face_down then
       for _, card in ipairs(G.hand.highlighted) do
          if card.facing == "back" then return nil end
       end
    end
 
-   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck, DV.PRE.show_min_max)
+   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck, G.SETTINGS.DV.show_min_max)
 end
 
 function DV.PRE.get_held_cards()
@@ -56,7 +68,7 @@ function DV.PRE.add_update_event(trigger)
       DV.PRE.data = DV.PRE.simulate()
       return true
    end
-   if DV.PRE.enabled then
+   if DV.PRE.enabled() then
       G.E_MANAGER:add_event(Event({trigger = trigger, func = sim_func}))
    end
 end
@@ -139,10 +151,10 @@ end
 
 function DV.PRE.add_reset_event(trigger)
    function reset_func()
-      DV.PRE.data = {min = 0, max = 0}
+      DV.PRE.data = {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
       return true
    end
-   if DV.PRE.enabled then
+   if DV.PRE.enabled() then
       G.E_MANAGER:add_event(Event({trigger = trigger, func = reset_func}))
    end
 end
@@ -170,9 +182,13 @@ local orig_hud = create_UIBox_HUD
 function create_UIBox_HUD()
    local contents = orig_hud()
 
-   local sim_node_wrap = {n=G.UIT.R, config={id = "dv_pre_wrap", align = "cm", padding = 0.1}, nodes={}}
-   if DV.PRE.enabled then table.insert(sim_node_wrap.nodes, DV.PRE.get_sim_node()) end
-   table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, sim_node_wrap)
+   local score_node_wrap = {n=G.UIT.R, config={id = "dv_pre_score_wrap", align = "cm", padding = 0.1}, nodes={}}
+   if G.SETTINGS.DV.preview_score then table.insert(score_node_wrap.nodes, DV.PRE.get_score_node()) end
+   table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, score_node_wrap)
+
+   local dollars_node_wrap = {n=G.UIT.C, config={id = "dv_pre_dollars_wrap", align = "cm"}, nodes={}}
+   if G.SETTINGS.DV.preview_dollars then table.insert(dollars_node_wrap.nodes, DV.PRE.get_dollars_node()) end
+   table.insert(contents.nodes[1].nodes[1].nodes[5].nodes[2].nodes[3].nodes[1].nodes[1].nodes[1].nodes, dollars_node_wrap)
 
    return contents
 end
@@ -189,36 +205,42 @@ function DV.PRE.is_enough_to_win(chips)
 end
 
 -- Add animation to preview text:
-function G.FUNCS.simulation_UI_set(e)
+function G.FUNCS.dv_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
    if DV.PRE.data then
-      if DV.PRE.show_min_max then
-		 local has_range = (DV.PRE.data.min ~= DV.PRE.data.max)
+      if G.SETTINGS.DV.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
+		 -- Format as 'X - Y' :
 		 if e.config.id == "dv_pre_l" then
-			new_preview_text = DV.PRE.format_number(DV.PRE.data.min)
-			if has_range then new_preview_text = new_preview_text .. " - " end
-			if DV.PRE.is_enough_to_win(DV.PRE.data.min) then should_juice = true end
+			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min) .. " - "
+			if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
 		 elseif e.config.id == "dv_pre_r" then
-			if has_range
-			then new_preview_text = DV.PRE.format_number(DV.PRE.data.max)
-			else new_preview_text = ""
-			end
-			if DV.PRE.is_enough_to_win(DV.PRE.data.max) then should_juice = true end
+			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.max)
+			if DV.PRE.is_enough_to_win(DV.PRE.data.score.max) then should_juice = true end
          end
       else
-		 if e.config.id == "dv_pre_l"
-		 then new_preview_text = number_format(DV.PRE.data.min)
-		 else new_preview_text = ""
+		 -- Format as single number:
+		 if e.config.id == "dv_pre_l" then
+			if G.SETTINGS.DV.show_min_max then
+			   -- Spaces around number necessary to distinguish Min/Max text from Exact text,
+			   -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
+			   new_preview_text = " " .. DV.PRE.format_number(DV.PRE.data.score.min) .. " "
+			else
+			   new_preview_text = number_format(DV.PRE.data.score.min)
+			end
+		 else
+			new_preview_text = ""
 		 end
-		 if DV.PRE.is_enough_to_win(DV.PRE.data.min) then should_juice = true end
+		 if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
       end
    else
-      new_preview_text = "????"
+	  -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
+	  if G.SETTINGS.DV.show_min_max then new_preview_text = " ??? "
+	  else new_preview_text = "???" end
    end
 
-   if (not DV.PRE.text[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text[e.config.id:sub(-1)] then
-      DV.PRE.text[e.config.id:sub(-1)] = new_preview_text
+   if (not DV.PRE.text.score[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text.score[e.config.id:sub(-1)] then
+      DV.PRE.text.score[e.config.id:sub(-1)] = new_preview_text
       e.config.object:update_text()
       -- Wobble:
       if not G.TAROT_INTERRUPT_PULSE then
@@ -234,19 +256,80 @@ function G.FUNCS.simulation_UI_set(e)
    end
 end
 
+function DV.PRE.get_sign_str(n)
+   if n >= 0 then return "+"
+   else return "" -- Negative numbers already have a sign
+   end
+end
+
+function DV.PRE.get_dollar_colour(n)
+   if n == 0 then return HEX("7e7667")
+   elseif n > 0 then return G.C.MONEY
+   elseif n < 0 then return G.C.RED
+   end
+end
+
+function G.FUNCS.dv_pre_dollars_UI_set(e)
+   local new_preview_text = ""
+   local new_colour = nil
+   if DV.PRE.data then
+	  if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
+		 if e.config.id == "dv_pre_dollars_top" then
+			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
+			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
+		 elseif e.config.id == "dv_pre_dollars_bot" then
+			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
+			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+		 end
+	  else
+		 if e.config.id == "dv_pre_dollars_top" then
+			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
+			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+		 else
+			new_preview_text = ""
+			new_colour = DV.PRE.get_dollar_colour(0)
+		 end
+	  end
+   else
+	  new_preview_text = " +??"
+	  new_colour = DV.PRE.get_dollar_colour(0)
+   end
+
+   if (not DV.PRE.text.dollars[e.config.id:sub(-3)]) or new_preview_text ~= DV.PRE.text.dollars[e.config.id:sub(-3)] then
+      DV.PRE.text.dollars[e.config.id:sub(-3)] = new_preview_text
+	  e.config.object.colours = {new_colour}
+      e.config.object:update_text()
+      if not G.TAROT_INTERRUPT_PULSE then e.config.object:pulse(0.25) end
+   end
+end
+
 -- Append toggle option to settings:
 local orig_settings = G.UIDEF.settings_tab
 function G.UIDEF.settings_tab(tab)
-   function preview_toggle_callback(_)
+   function preview_score_toggle_callback(e)
       if not G.HUD then return end
 
-      if DV.PRE.enabled then
+      if G.SETTINGS.DV.preview_score then
          -- Preview was just enabled, so add preview node:
-         G.HUD:add_child(DV.PRE.get_sim_node(), G.HUD:get_UIE_by_ID("dv_pre_wrap"))
+         G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
          DV.PRE.data = DV.PRE.simulate()
       else
          -- Preview was just disabled, so remove preview node:
-         G.HUD:get_UIE_by_ID("dv_pre").parent:remove()
+         G.HUD:get_UIE_by_ID("dv_pre_score").parent:remove()
+      end
+      G.HUD:recalculate()
+   end
+
+   function preview_dollars_toggle_callback(_)
+      if not G.HUD then return end
+
+      if G.SETTINGS.DV.preview_dollars then
+         -- Preview was just enabled, so add preview node:
+         G.HUD:add_child(DV.PRE.get_dollars_node(), G.HUD:get_UIE_by_ID("dv_pre_dollars_wrap"))
+         DV.PRE.data = DV.PRE.simulate()
+      else
+         -- Preview was just disabled, so remove preview node:
+         G.HUD:get_UIE_by_ID("dv_pre_dollars").parent:remove()
       end
       G.HUD:recalculate()
    end
@@ -259,10 +342,10 @@ function G.UIDEF.settings_tab(tab)
    end
 
    function minmax_toggle_callback(_)
-      if not G.HUD or not DV.PRE.enabled then return end
+      if not G.HUD or not DV.PRE.enabled() then return end
 
       DV.PRE.data = DV.PRE.simulate()
-      if not DV.PRE.show_min_max then
+      if not G.SETTINGS.DV.show_min_max then
          -- Min-Max was just disabled, so increase scale:
          G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
          G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
@@ -277,33 +360,50 @@ function G.UIDEF.settings_tab(tab)
    local contents = orig_settings(tab)
    if tab == 'Game' then
       local preview_setting_nodes = {n = G.UIT.R, config = {align = "cm"}, nodes ={
-                                        create_toggle({label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "enabled", callback = preview_toggle_callback}),
-                                        create_toggle({label = "Show Min-Max Score instead of Exact", ref_table = DV.PRE, ref_value = "show_min_max", callback = minmax_toggle_callback}),
-                                        create_toggle({label = "Hide Score Preview if Any Card is Face-Down", ref_table = DV.PRE, ref_value = "hide_face_down", callback = face_down_toggle_callback})
+                                        create_toggle({id = "score_toggle", label = "Enable Score Preview", ref_table = G.SETTINGS.DV, ref_value = "preview_score", callback = preview_score_toggle_callback}),
+                                        create_toggle({id = "dollars_toggle", label = "Enable Money Preview", ref_table = G.SETTINGS.DV, ref_value = "preview_dollars", callback = preview_dollars_toggle_callback}),
+                                        create_toggle({label = "Show Min/Max Preview Instead of Exact", ref_table = G.SETTINGS.DV, ref_value = "show_min_max", callback = minmax_toggle_callback}),
+                                        create_toggle({label = "Hide Preview if Any Card is Face-Down", ref_table = G.SETTINGS.DV, ref_value = "hide_face_down", callback = face_down_toggle_callback})
                                     }}
       table.insert(contents.nodes, preview_setting_nodes)
    end
    return contents
 end
 
-function DV.PRE.get_sim_node()
+function DV.PRE.get_score_node()
    local text_scale = nil
-   if DV.PRE.show_min_max then text_scale = 0.5
+   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
    else text_scale = 0.75 end
 
-   return {n = G.UIT.C, config = {id = "dv_pre", align = "cm"}, nodes={
-			  {n=G.UIT.O, config={id = "dv_pre_l", func = "simulation_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
-              {n=G.UIT.O, config={id = "dv_pre_r", func = "simulation_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+   return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
+			  {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+   }}
+end
+
+function DV.PRE.get_dollars_node()
+   return {n=G.UIT.C, config={id = "dv_pre_dollars", align = "cm"}, nodes={
+	   {n=G.UIT.R, config={align = "cm"}, nodes={
+		   {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
+	   }},
+	   {n=G.UIT.R, config={minh = 0.05}, nodes={}},
+	   {n=G.UIT.R, config={align = "cm"}, nodes={
+		   {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
+	   }}
    }}
 end
 
 function DV.PRE.format_number(num)
    if not num or type(num) ~= 'number' then return num or '' end
    -- Start using e-notation earlier to reduce number length, if showing min and max for preview:
-   if DV.PRE.show_min_max and num >= 1e7 then
+   if G.SETTINGS.DV.show_min_max and num >= 1e7 then
       local x = string.format("%.4g",num)
       local fac = math.floor(math.log(tonumber(x), 10))
       return string.format("%.2f",x/(10^fac))..'e'..fac
    end
    return number_format(num) -- Default Balatro function.
+end
+
+function DV.PRE.enabled()
+   return G.SETTINGS.DV.preview_score or G.SETTINGS.DV.preview_dollars
 end
