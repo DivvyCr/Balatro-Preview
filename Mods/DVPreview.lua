@@ -8,11 +8,12 @@ if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
 
 if not G.SETTINGS.DV then
-   G.SETTINGS.DV = {}
-   G.SETTINGS.DV.preview_score = true
-   G.SETTINGS.DV.preview_dollars = true
-   G.SETTINGS.DV.hide_face_down = true
-   G.SETTINGS.DV.show_min_max = false
+   G.SETTINGS.DV = {
+	  preview_score = true,
+	  preview_dollars = true,
+	  hide_face_down = true,
+	  show_min_max = false
+   }
 end
 
 DV.PRE = {
@@ -235,8 +236,13 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       end
    else
 	  -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
-	  if G.SETTINGS.DV.show_min_max then new_preview_text = " ??? "
-	  else new_preview_text = "???" end
+	  if e.config.id == "dv_pre_l" then
+		 if G.SETTINGS.DV.show_min_max then new_preview_text = " ?????? "
+		 else new_preview_text = "??????"
+		 end
+	  else
+		 new_preview_text = ""
+	  end
    end
 
    if (not DV.PRE.text.score[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text.score[e.config.id:sub(-1)] then
