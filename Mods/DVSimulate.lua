@@ -28,7 +28,7 @@ DV.SIM = {
 --       modded jokers should still work but there will likely be side-effects,
 --       especially if they create/destroy/modify consumables or the deck.
 function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
-   local ret = {min = 0, exact = 0, max = 0}
+   local ret = {min = 0, max = 0}
    if #played_cards == 0 then return ret end
 
    local play_to_simulate = DV.deep_copy(played_cards)
@@ -37,7 +37,7 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
    if not is_minmax then
       DV.SIM.TYPE = 0
       DV.SIM.eval(played_cards, held_cards, jokers, deck)
-      ret.exact = DV.SIM.get_total()
+      ret.min = DV.SIM.get_total()
    else
       for x = 1, 2 do
          DV.SIM.TYPE = (x == 1 and -1 or 1)
