@@ -11,8 +11,14 @@ DV.PRE = {
    enabled = true,
    hide_face_down = true,
    show_min_max = false,
-   data = {min = 0, max = 0},
-   text = {l = "", r = ""},
+   data = {
+	  min = 0, max = 0,
+	  dollars = {min = 0, max = 0}
+   },
+   text = {
+	  l = "", r = "",
+	  dollars = {top = "", bot = ""}
+   },
    joker_order = {},
    hand_order = {}
 }
@@ -139,7 +145,7 @@ end
 
 function DV.PRE.add_reset_event(trigger)
    function reset_func()
-      DV.PRE.data = {min = 0, max = 0}
+      DV.PRE.data = {min = 0, max = 0, dollars = {min = 0, max = 0}}
       return true
    end
    if DV.PRE.enabled then
@@ -174,6 +180,17 @@ function create_UIBox_HUD()
    if DV.PRE.enabled then table.insert(sim_node_wrap.nodes, DV.PRE.get_sim_node()) end
    table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, sim_node_wrap)
 
+   local y = {n=G.UIT.C, config={align = "cm"}, nodes={
+				 {n=G.UIT.R, config={align = "cm"}, nodes={
+					 {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {G.C.MONEY}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
+				 }},
+				 {n=G.UIT.R, config={minh = 0.05}, nodes={}},
+				 {n=G.UIT.R, config={align = "cm"}, nodes={
+					 {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {G.C.MONEY}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
+				 }}
+			 }}
+   table.insert(contents.nodes[1].nodes[1].nodes[5].nodes[2].nodes[3].nodes[1].nodes[1].nodes[1].nodes, y)
+
    return contents
 end
 
@@ -189,7 +206,7 @@ function DV.PRE.is_enough_to_win(chips)
 end
 
 -- Add animation to preview text:
-function G.FUNCS.simulation_UI_set(e)
+function G.FUNCS.dv_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
    if DV.PRE.data then
@@ -231,6 +248,53 @@ function G.FUNCS.simulation_UI_set(e)
 			e.config.object.colours = {G.C.UI.TEXT_LIGHT}
 		 end
       end
+   end
+end
+
+function DV.PRE.get_sign_str(n)
+   if n >= 0 then return "+"
+   else return "" -- Negative numbers already have a sign
+   end
+end
+
+function DV.PRE.get_dollar_colour(n)
+   if n == 0 then return HEX("7e7667")
+   elseif n > 0 then return G.C.MONEY
+   elseif n < 0 then return G.C.RED
+   end
+end
+
+function G.FUNCS.dv_pre_dollars_UI_set(e)
+   local new_preview_text = ""
+   local new_colour = nil
+   if DV.PRE.data then
+	  if DV.PRE.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
+		 if e.config.id == "dv_pre_dollars_top" then
+			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
+			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
+		 elseif e.config.id == "dv_pre_dollars_bot" then
+			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
+			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+		 end
+	  else
+		 if e.config.id == "dv_pre_dollars_top" then
+			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
+			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+		 else
+			new_preview_text = ""
+			new_colour = DV.PRE.get_dollar_colour(0)
+		 end
+	  end
+   else
+	  new_preview_text = " +??"
+	  new_colour = DV.PRE.get_dollar_colour(0)
+   end
+
+   if (not DV.PRE.text.dollars[e.config.id:sub(-3)]) or new_preview_text ~= DV.PRE.text.dollars[e.config.id:sub(-3)] then
+      DV.PRE.text.dollars[e.config.id:sub(-3)] = new_preview_text
+	  e.config.object.colours = {new_colour}
+      e.config.object:update_text()
+      if not G.TAROT_INTERRUPT_PULSE then e.config.object:pulse(0.25) end
    end
 end
 
@@ -292,8 +356,8 @@ function DV.PRE.get_sim_node()
    else text_scale = 0.75 end
 
    return {n = G.UIT.C, config = {id = "dv_pre", align = "cm"}, nodes={
-			  {n=G.UIT.O, config={id = "dv_pre_l", func = "simulation_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
-              {n=G.UIT.O, config={id = "dv_pre_r", func = "simulation_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+			  {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
    }}
 end
 
