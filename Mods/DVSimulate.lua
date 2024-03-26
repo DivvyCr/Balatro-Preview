@@ -285,7 +285,9 @@ function DV.SIM.prep_before_play()
          local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
          table.remove(G.hand.cards, card_key)
          for _, joker in ipairs(G.jokers.cards) do
-            joker:calculate_joker({discard = true, other_card = selected_card, full_hand = DV.SIM.data.played_cards})
+			if joker.ability.name ~= "Yorick" then
+			   joker:calculate_joker({discard = true, other_card = selected_card, full_hand = DV.SIM.data.played_cards})
+			end
          end
       end
    end
