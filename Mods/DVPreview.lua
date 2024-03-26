@@ -221,9 +221,14 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       else
 		 -- Format as single number:
 		 if e.config.id == "dv_pre_l" then
-			if G.SETTINGS.DV.show_min_max then new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min)
-			else new_preview_text = number_format(DV.PRE.data.score.min)
+			if G.SETTINGS.DV.show_min_max then
+			   -- Spaces around number necessary to distinguish Min/Max text from Exact text,
+			   -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
+			   new_preview_text = " " .. DV.PRE.format_number(DV.PRE.data.score.min) .. " "
+			else
+			   new_preview_text = number_format(DV.PRE.data.score.min)
 			end
+			new_preview_text = " " .. new_preview_text .. " "
 		 else
 			new_preview_text = ""
 		 end
