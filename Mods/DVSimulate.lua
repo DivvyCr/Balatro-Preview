@@ -31,7 +31,7 @@ DV.SIM = {
 --       especially if they create/destroy/modify consumables or the deck.
 function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
    local ret = {
-	  min = 0, max = 0,
+	  score = {min = 0, max = 0},
 	  dollars = {min = 0, max = 0}
    }
 
@@ -43,7 +43,7 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
    if not is_minmax then
       DV.SIM.TYPE = 0
       DV.SIM.eval(played_cards, held_cards, jokers, deck)
-      ret.min = DV.SIM.get_total()
+      ret.score.min = DV.SIM.get_total()
 	  ret.dollars.min = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
    else
       for x = 1, 2 do
@@ -52,11 +52,11 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
          DV.SIM.eval(played_cards, held_cards, jokers, deck)
 
          if DV.SIM.TYPE == -1 then
-			ret.min = DV.SIM.get_total()
+			ret.score.min = DV.SIM.get_total()
 			ret.dollars.min = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
 		 end
          if DV.SIM.TYPE ==  1 then
-			ret.max = DV.SIM.get_total()
+			ret.score.max = DV.SIM.get_total()
 			ret.dollars.max = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
 		 end
       end
