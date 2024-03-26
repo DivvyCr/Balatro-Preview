@@ -288,7 +288,7 @@ end
 
 function DV.SIM.init_chips_mult()
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
-   if G.GAME.blind.name == "The Arm" then
+   if G.GAME.blind.name == "The Arm" and hand_info.level > 1 then
       -- Account for -1 level:
       DV.SIM.mult = mod_mult(math.max(1, hand_info.mult - hand_info.l_mult))
       DV.SIM.chips = mod_chips(math.max(0, hand_info.chips - hand_info.l_chips))
