@@ -8,7 +8,8 @@ if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
 
 DV.PRE = {
-   enabled = true,
+   score_enabled = true,
+   dollars_enabled = true,
    hide_face_down = true,
    show_min_max = false,
    data = {
@@ -16,7 +17,7 @@ DV.PRE = {
 	  dollars = {min = 0, max = 0}
    },
    text = {
-	  l = "", r = "",
+	  score = {l = "", r = ""},
 	  dollars = {top = "", bot = ""}
    },
    joker_order = {},
@@ -63,7 +64,7 @@ function DV.PRE.add_update_event(trigger)
       DV.PRE.data = DV.PRE.simulate()
       return true
    end
-   if DV.PRE.enabled then
+   if DV.PRE.enabled() then
       G.E_MANAGER:add_event(Event({trigger = trigger, func = sim_func}))
    end
 end
@@ -149,7 +150,7 @@ function DV.PRE.add_reset_event(trigger)
       DV.PRE.data = {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
       return true
    end
-   if DV.PRE.enabled then
+   if DV.PRE.enabled() then
       G.E_MANAGER:add_event(Event({trigger = trigger, func = reset_func}))
    end
 end
@@ -177,20 +178,13 @@ local orig_hud = create_UIBox_HUD
 function create_UIBox_HUD()
    local contents = orig_hud()
 
-   local sim_node_wrap = {n=G.UIT.R, config={id = "dv_pre_wrap", align = "cm", padding = 0.1}, nodes={}}
-   if DV.PRE.enabled then table.insert(sim_node_wrap.nodes, DV.PRE.get_sim_node()) end
-   table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, sim_node_wrap)
+   local score_node_wrap = {n=G.UIT.R, config={id = "dv_pre_score_wrap", align = "cm", padding = 0.1}, nodes={}}
+   if DV.PRE.score_enabled then table.insert(score_node_wrap.nodes, DV.PRE.get_score_node()) end
+   table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, score_node_wrap)
 
-   local y = {n=G.UIT.C, config={align = "cm"}, nodes={
-				 {n=G.UIT.R, config={align = "cm"}, nodes={
-					 {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {G.C.MONEY}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
-				 }},
-				 {n=G.UIT.R, config={minh = 0.05}, nodes={}},
-				 {n=G.UIT.R, config={align = "cm"}, nodes={
-					 {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {G.C.MONEY}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
-				 }}
-			 }}
-   table.insert(contents.nodes[1].nodes[1].nodes[5].nodes[2].nodes[3].nodes[1].nodes[1].nodes[1].nodes, y)
+   local dollars_node_wrap = {n=G.UIT.C, config={id = "dv_pre_dollars_wrap", align = "cm"}, nodes={}}
+   if DV.PRE.dollars_enabled then table.insert(dollars_node_wrap.nodes, DV.PRE.get_dollars_node()) end
+   table.insert(contents.nodes[1].nodes[1].nodes[5].nodes[2].nodes[3].nodes[1].nodes[1].nodes[1].nodes, dollars_node_wrap)
 
    return contents
 end
@@ -235,8 +229,8 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       new_preview_text = "????"
    end
 
-   if (not DV.PRE.text[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text[e.config.id:sub(-1)] then
-      DV.PRE.text[e.config.id:sub(-1)] = new_preview_text
+   if (not DV.PRE.text.score[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text.score[e.config.id:sub(-1)] then
+      DV.PRE.text.score[e.config.id:sub(-1)] = new_preview_text
       e.config.object:update_text()
       -- Wobble:
       if not G.TAROT_INTERRUPT_PULSE then
@@ -302,16 +296,30 @@ end
 -- Append toggle option to settings:
 local orig_settings = G.UIDEF.settings_tab
 function G.UIDEF.settings_tab(tab)
-   function preview_toggle_callback(_)
+   function preview_score_toggle_callback(e)
       if not G.HUD then return end
 
-      if DV.PRE.enabled then
+      if DV.PRE.score_enabled then
          -- Preview was just enabled, so add preview node:
-         G.HUD:add_child(DV.PRE.get_sim_node(), G.HUD:get_UIE_by_ID("dv_pre_wrap"))
+         G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
          DV.PRE.data = DV.PRE.simulate()
       else
          -- Preview was just disabled, so remove preview node:
-         G.HUD:get_UIE_by_ID("dv_pre").parent:remove()
+         G.HUD:get_UIE_by_ID("dv_pre_score").parent:remove()
+      end
+      G.HUD:recalculate()
+   end
+
+   function preview_dollars_toggle_callback(_)
+      if not G.HUD then return end
+
+      if DV.PRE.dollars_enabled then
+         -- Preview was just enabled, so add preview node:
+         G.HUD:add_child(DV.PRE.get_dollars_node(), G.HUD:get_UIE_by_ID("dv_pre_dollars_wrap"))
+         DV.PRE.data = DV.PRE.simulate()
+      else
+         -- Preview was just disabled, so remove preview node:
+         G.HUD:get_UIE_by_ID("dv_pre_dollars").parent:remove()
       end
       G.HUD:recalculate()
    end
@@ -324,7 +332,7 @@ function G.UIDEF.settings_tab(tab)
    end
 
    function minmax_toggle_callback(_)
-      if not G.HUD or not DV.PRE.enabled then return end
+      if not G.HUD or not DV.PRE.enabled() then return end
 
       DV.PRE.data = DV.PRE.simulate()
       if not DV.PRE.show_min_max then
@@ -342,23 +350,36 @@ function G.UIDEF.settings_tab(tab)
    local contents = orig_settings(tab)
    if tab == 'Game' then
       local preview_setting_nodes = {n = G.UIT.R, config = {align = "cm"}, nodes ={
-                                        create_toggle({label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "enabled", callback = preview_toggle_callback}),
-                                        create_toggle({label = "Show Min-Max Score instead of Exact", ref_table = DV.PRE, ref_value = "show_min_max", callback = minmax_toggle_callback}),
-                                        create_toggle({label = "Hide Score Preview if Any Card is Face-Down", ref_table = DV.PRE, ref_value = "hide_face_down", callback = face_down_toggle_callback})
+                                        create_toggle({id = "score_toggle", label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "score_enabled", callback = preview_score_toggle_callback}),
+                                        create_toggle({id = "dollars_toggle", label = "Enable Money Preview", ref_table = DV.PRE, ref_value = "dollars_enabled", callback = preview_dollars_toggle_callback}),
+                                        create_toggle({label = "Show Min/Max Preview Instead of Exact", ref_table = DV.PRE, ref_value = "show_min_max", callback = minmax_toggle_callback}),
+                                        create_toggle({label = "Hide Preview if Any Card is Face-Down", ref_table = DV.PRE, ref_value = "hide_face_down", callback = face_down_toggle_callback})
                                     }}
       table.insert(contents.nodes, preview_setting_nodes)
    end
    return contents
 end
 
-function DV.PRE.get_sim_node()
+function DV.PRE.get_score_node()
    local text_scale = nil
    if DV.PRE.show_min_max then text_scale = 0.5
    else text_scale = 0.75 end
 
-   return {n = G.UIT.C, config = {id = "dv_pre", align = "cm"}, nodes={
-			  {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
-              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+   return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
+			  {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+   }}
+end
+
+function DV.PRE.get_dollars_node()
+   return {n=G.UIT.C, config={id = "dv_pre_dollars", align = "cm"}, nodes={
+	   {n=G.UIT.R, config={align = "cm"}, nodes={
+		   {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
+	   }},
+	   {n=G.UIT.R, config={minh = 0.05}, nodes={}},
+	   {n=G.UIT.R, config={align = "cm"}, nodes={
+		   {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
+	   }}
    }}
 end
 
@@ -371,4 +392,8 @@ function DV.PRE.format_number(num)
       return string.format("%.2f",x/(10^fac))..'e'..fac
    end
    return number_format(num) -- Default Balatro function.
+end
+
+function DV.PRE.enabled()
+   return DV.PRE.score_enabled or DV.PRE.dollars_enabled
 end
