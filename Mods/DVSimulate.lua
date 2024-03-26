@@ -435,10 +435,11 @@ end
 local orig_eval_card = eval_card
 function eval_card(card, context)
    if DV.contains(card.ability.name, DV.SIM.JOKERS_RANDOM) then
-	  if G.GAME.probabilities.normal < card.ability.extra then
+	  local odds = (type(card.ability.extra) == "number" and card.ability.extra or card.ability.extra.odds)
+	  if G.GAME.probabilities.normal < odds then
 		 local p = G.GAME.probabilities.normal
 		 if DV.SIM.TYPE == 1 then
-			G.GAME.probabilities.normal = card.ability.extra
+			G.GAME.probabilities.normal = odds
 		 elseif DV.SIM.TYPE == -1 then
 			G.GAME.probabilities.normal = 0
 		 end
@@ -458,10 +459,11 @@ end
 local orig_eval_joker = Card.calculate_joker
 function Card:calculate_joker(context)
    if DV.contains(self.ability.name, DV.SIM.JOKERS_RANDOM) then
-	  if G.GAME.probabilities.normal < self.ability.extra then
+	  local odds = (type(self.ability.extra) == "number" and self.ability.extra or self.ability.extra.odds)
+	  if G.GAME.probabilities.normal < odds then
 		 local p = G.GAME.probabilities.normal
 		 if DV.SIM.TYPE == 1 then
-			G.GAME.probabilities.normal = self.ability.extra
+			G.GAME.probabilities.normal = odds
 		 elseif DV.SIM.TYPE == -1 then
 			G.GAME.probabilities.normal = 0
 		 end
@@ -480,7 +482,8 @@ end
 
 local orig_pseudorandom = pseudorandom
 function pseudorandom(seed, min, max)
-   if seed == "lucky_mult" or seed == "lucky_money" then
+   if DV.SIM.running and
+	  (seed == "lucky_mult" or seed == "lucky_money") then
 	  -- Need to return low for 100% chance and high for 0% chance,
 	  -- because the check is: pseudorandom(..) < G.GAME.probability.normal/chance
 	  if DV.SIM.TYPE == 1 then return 0
