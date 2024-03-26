@@ -7,11 +7,15 @@
 if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
 
+if not G.SETTINGS.DV then
+   G.SETTINGS.DV = {}
+   G.SETTINGS.DV.preview_score = true
+   G.SETTINGS.DV.preview_dollars = true
+   G.SETTINGS.DV.hide_face_down = true
+   G.SETTINGS.DV.show_min_max = false
+end
+
 DV.PRE = {
-   score_enabled = true,
-   dollars_enabled = true,
-   hide_face_down = true,
-   show_min_max = false,
    data = {
 	  score = {min = 0, max = 0},
 	  dollars = {min = 0, max = 0}
@@ -36,13 +40,13 @@ function DV.PRE.simulate()
    then return {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
    end
 
-   if DV.PRE.hide_face_down then
+   if G.SETTINGS.DV.hide_face_down then
       for _, card in ipairs(G.hand.highlighted) do
          if card.facing == "back" then return nil end
       end
    end
 
-   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck, DV.PRE.show_min_max)
+   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck, G.SETTINGS.DV.show_min_max)
 end
 
 function DV.PRE.get_held_cards()
@@ -179,11 +183,11 @@ function create_UIBox_HUD()
    local contents = orig_hud()
 
    local score_node_wrap = {n=G.UIT.R, config={id = "dv_pre_score_wrap", align = "cm", padding = 0.1}, nodes={}}
-   if DV.PRE.score_enabled then table.insert(score_node_wrap.nodes, DV.PRE.get_score_node()) end
+   if G.SETTINGS.DV.preview_score then table.insert(score_node_wrap.nodes, DV.PRE.get_score_node()) end
    table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, score_node_wrap)
 
    local dollars_node_wrap = {n=G.UIT.C, config={id = "dv_pre_dollars_wrap", align = "cm"}, nodes={}}
-   if DV.PRE.dollars_enabled then table.insert(dollars_node_wrap.nodes, DV.PRE.get_dollars_node()) end
+   if G.SETTINGS.DV.preview_dollars then table.insert(dollars_node_wrap.nodes, DV.PRE.get_dollars_node()) end
    table.insert(contents.nodes[1].nodes[1].nodes[5].nodes[2].nodes[3].nodes[1].nodes[1].nodes[1].nodes, dollars_node_wrap)
 
    return contents
@@ -205,7 +209,7 @@ function G.FUNCS.dv_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
    if DV.PRE.data then
-      if DV.PRE.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
+      if G.SETTINGS.DV.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
 		 -- Format as 'X - Y' :
 		 if e.config.id == "dv_pre_l" then
 			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min) .. " - "
@@ -217,7 +221,7 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       else
 		 -- Format as single number:
 		 if e.config.id == "dv_pre_l" then
-			if DV.PRE.show_min_max then new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min)
+			if G.SETTINGS.DV.show_min_max then new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min)
 			else new_preview_text = number_format(DV.PRE.data.score.min)
 			end
 		 else
@@ -263,7 +267,7 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
    local new_preview_text = ""
    local new_colour = nil
    if DV.PRE.data then
-	  if DV.PRE.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
+	  if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
 		 if e.config.id == "dv_pre_dollars_top" then
 			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
 			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
@@ -299,7 +303,7 @@ function G.UIDEF.settings_tab(tab)
    function preview_score_toggle_callback(e)
       if not G.HUD then return end
 
-      if DV.PRE.score_enabled then
+      if G.SETTINGS.DV.preview_score then
          -- Preview was just enabled, so add preview node:
          G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
          DV.PRE.data = DV.PRE.simulate()
@@ -313,7 +317,7 @@ function G.UIDEF.settings_tab(tab)
    function preview_dollars_toggle_callback(_)
       if not G.HUD then return end
 
-      if DV.PRE.dollars_enabled then
+      if G.SETTINGS.DV.preview_dollars then
          -- Preview was just enabled, so add preview node:
          G.HUD:add_child(DV.PRE.get_dollars_node(), G.HUD:get_UIE_by_ID("dv_pre_dollars_wrap"))
          DV.PRE.data = DV.PRE.simulate()
@@ -335,7 +339,7 @@ function G.UIDEF.settings_tab(tab)
       if not G.HUD or not DV.PRE.enabled() then return end
 
       DV.PRE.data = DV.PRE.simulate()
-      if not DV.PRE.show_min_max then
+      if not G.SETTINGS.DV.show_min_max then
          -- Min-Max was just disabled, so increase scale:
          G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
          G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
@@ -350,10 +354,10 @@ function G.UIDEF.settings_tab(tab)
    local contents = orig_settings(tab)
    if tab == 'Game' then
       local preview_setting_nodes = {n = G.UIT.R, config = {align = "cm"}, nodes ={
-                                        create_toggle({id = "score_toggle", label = "Enable Score Preview", ref_table = DV.PRE, ref_value = "score_enabled", callback = preview_score_toggle_callback}),
-                                        create_toggle({id = "dollars_toggle", label = "Enable Money Preview", ref_table = DV.PRE, ref_value = "dollars_enabled", callback = preview_dollars_toggle_callback}),
-                                        create_toggle({label = "Show Min/Max Preview Instead of Exact", ref_table = DV.PRE, ref_value = "show_min_max", callback = minmax_toggle_callback}),
-                                        create_toggle({label = "Hide Preview if Any Card is Face-Down", ref_table = DV.PRE, ref_value = "hide_face_down", callback = face_down_toggle_callback})
+                                        create_toggle({id = "score_toggle", label = "Enable Score Preview", ref_table = G.SETTINGS.DV, ref_value = "preview_score", callback = preview_score_toggle_callback}),
+                                        create_toggle({id = "dollars_toggle", label = "Enable Money Preview", ref_table = G.SETTINGS.DV, ref_value = "preview_dollars", callback = preview_dollars_toggle_callback}),
+                                        create_toggle({label = "Show Min/Max Preview Instead of Exact", ref_table = G.SETTINGS.DV, ref_value = "show_min_max", callback = minmax_toggle_callback}),
+                                        create_toggle({label = "Hide Preview if Any Card is Face-Down", ref_table = G.SETTINGS.DV, ref_value = "hide_face_down", callback = face_down_toggle_callback})
                                     }}
       table.insert(contents.nodes, preview_setting_nodes)
    end
@@ -362,7 +366,7 @@ end
 
 function DV.PRE.get_score_node()
    local text_scale = nil
-   if DV.PRE.show_min_max then text_scale = 0.5
+   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
    else text_scale = 0.75 end
 
    return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
@@ -386,7 +390,7 @@ end
 function DV.PRE.format_number(num)
    if not num or type(num) ~= 'number' then return num or '' end
    -- Start using e-notation earlier to reduce number length, if showing min and max for preview:
-   if DV.PRE.show_min_max and num >= 1e7 then
+   if G.SETTINGS.DV.show_min_max and num >= 1e7 then
       local x = string.format("%.4g",num)
       local fac = math.floor(math.log(tonumber(x), 10))
       return string.format("%.2f",x/(10^fac))..'e'..fac
@@ -395,5 +399,5 @@ function DV.PRE.format_number(num)
 end
 
 function DV.PRE.enabled()
-   return DV.PRE.score_enabled or DV.PRE.dollars_enabled
+   return G.SETTINGS.DV.preview_score or G.SETTINGS.DV.preview_dollars
 end
