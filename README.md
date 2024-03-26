@@ -3,7 +3,7 @@
 <p align="center"><img src="gifs/DVPreview_Demo-1.gif" style="width:100%" /></p>
 
 <p align="center">
-<b>Simulate the score you will get on the selected cards!</b>
+<b>Simulate the score and the dollars that you will get by playing the selected cards!</b>
 </p>
 
 ## Installation
@@ -24,17 +24,17 @@
 ## See It In Action
 
 <p align="center"><img src="gifs/DVPreview_Demo-2.gif" style="width:90%" /></p>
-<p align="center">Demonstration for viewing the score when some cards are face-down.</p>
+<p align="center">Demonstration for the preview updating in real-time.</p>
 
 &nbsp;
 
 <p align="center"><img src="gifs/DVPreview_Demo-3.gif" style="width:90%" /></p>
-<p align="center">Demonstration for the score changing in real-time.</p>
+<p align="center">Demonstration for the preview being hidden with face-down cards.</p>
 
 &nbsp;
 
 <p align="center"><img src="gifs/DVPreview_Demo-4.gif" style="width:90%" /></p>
-<p align="center">Demonstration for the score changing in real-time, again.</p>
+<p align="center">Demonstration for the preview updating in real-time, pay attention to the dollars.</p>
 
 ## Use My Simulation!
 
