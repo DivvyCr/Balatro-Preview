@@ -228,14 +228,15 @@ function G.FUNCS.dv_pre_score_UI_set(e)
 			else
 			   new_preview_text = number_format(DV.PRE.data.score.min)
 			end
-			new_preview_text = " " .. new_preview_text .. " "
 		 else
 			new_preview_text = ""
 		 end
 		 if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
       end
    else
-      new_preview_text = "????"
+	  -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
+	  if G.SETTINGS.DV.show_min_max then new_preview_text = " ??? "
+	  else new_preview_text = "???" end
    end
 
    if (not DV.PRE.text.score[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text.score[e.config.id:sub(-1)] then
