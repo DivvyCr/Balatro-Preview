@@ -11,8 +11,10 @@ DV.SIM = {
    TYPE = 0,
    -- Table for saving and restoring game state:
    ORIG = {},
+
    -- Any joker names in the following array will be ignored by the simulation:
-   IGNORED = {--[["Vagabond"]]}
+   JOKERS_IGNORED = {--[["Vagabond"]]},
+   JOKERS_RANDOM = {"Space Joker", "Reserved Parking", "Bloodstone", "Business Card", "Cavendish", "Gros Michel"}
 }
 
 --
@@ -28,7 +30,11 @@ DV.SIM = {
 --       modded jokers should still work but there will likely be side-effects,
 --       especially if they create/destroy/modify consumables or the deck.
 function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
-   local ret = {min = 0, max = 0}
+   local ret = {
+	  min = 0, max = 0,
+	  dollars = {min = 0, max = 0}
+   }
+
    if #played_cards == 0 then return ret end
 
    local play_to_simulate = DV.deep_copy(played_cards)
@@ -38,18 +44,21 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
       DV.SIM.TYPE = 0
       DV.SIM.eval(played_cards, held_cards, jokers, deck)
       ret.min = DV.SIM.get_total()
+	  ret.dollars.min = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
    else
       for x = 1, 2 do
          DV.SIM.TYPE = (x == 1 and -1 or 1)
 
-         -- Simulate both extremes: 0 when x=1, 1e9 when x=2:
-         local probability = G.GAME.probabilities.normal
-         G.GAME.probabilities.normal = (x-1) * 1e9
          DV.SIM.eval(played_cards, held_cards, jokers, deck)
-         G.GAME.probabilities.normal = probability
 
-         if DV.SIM.TYPE == -1 then ret.min = DV.SIM.get_total() end
-         if DV.SIM.TYPE ==  1 then ret.max = DV.SIM.get_total() end
+         if DV.SIM.TYPE == -1 then
+			ret.min = DV.SIM.get_total()
+			ret.dollars.min = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
+		 end
+         if DV.SIM.TYPE ==  1 then
+			ret.max = DV.SIM.get_total()
+			ret.dollars.max = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
+		 end
       end
    end
 
@@ -70,6 +79,8 @@ function DV.SIM.eval(played_cards, held_cards, jokers, deck)
    -- Run evaluation if hand is not debuffed:
    -- The last argument to debuff_hand() signifies that it is a CHECK, and doesn't update effects!
    if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name, true) then
+	  -- Check flag prevents this, so have to do manually:
+	  if G.GAME.blind.name == "The Ox" then ease_dollars(-G.GAME.dollars, true) end
       -- 0. Effects from JOKERS that will run BEFORE evaluation (eg. levelling Spare Trousers):
       DV.SIM.eval_before_effects()
       -- 1. Set mult and chips to base hand values:
@@ -264,15 +275,24 @@ function DV.SIM.eval_before_effects()
 end
 
 function DV.SIM.prep_before_play()
+   DV.SIM.chips = mod_chips(0)
+   DV.SIM.mult = mod_mult(0)
+   DV.SIM.dollars = 0
+   G.GAME.dollar_buffer = 0
+
    -- See Blind:press_play()
    if G.GAME.blind.name == "The Hook" then
       for i = 1, math.min(2, #G.hand.cards) do
+		 -- TODO: Simulate all possible combinations for true min-max?
+		 -- (consider when some cards in hand are steel and some are not)
          local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
          table.remove(G.hand.cards, card_key)
          for _, joker in ipairs(G.jokers.cards) do
             joker:calculate_joker({discard = true, other_card = selected_card, full_hand = DV.SIM.data.played_cards})
          end
       end
+   elseif G.GAME.blind.name == "The Tooth" then
+	  DV.SIM.dollars = DV.SIM.dollars - #DV.SIM.data.played_cards
    end
 
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
@@ -281,9 +301,6 @@ function DV.SIM.prep_before_play()
    G.GAME.current_round.hands_left = G.GAME.current_round.hands_left - 1
 
    G.GAME.blind.triggered = false
-
-   DV.SIM.chips = mod_chips(0)
-   DV.SIM.mult = mod_mult(0)
 end
 
 function DV.SIM.init_chips_mult()
@@ -417,6 +434,20 @@ end
 
 local orig_eval_card = eval_card
 function eval_card(card, context)
+   if DV.contains(card.ability.name, DV.SIM.JOKERS_RANDOM) then
+	  if G.GAME.probabilities.normal < card.ability.extra then
+		 local p = G.GAME.probabilities.normal
+		 if DV.SIM.TYPE == 1 then
+			G.GAME.probabilities.normal = card.ability.extra
+		 elseif DV.SIM.TYPE == -1 then
+			G.GAME.probabilities.normal = 0
+		 end
+		 local ret = orig_eval_card(card, context)
+		 G.GAME.probabilities.normal = p
+		 return ret
+	  end
+   end
+
    -- Breaks with joker-on-joker effects:
    -- if (card.ability.set == "Joker") and DV.contains(card.ability.name, DV.SIM.IGNORED) then
    --     return {}
@@ -426,6 +457,20 @@ end
 
 local orig_eval_joker = Card.calculate_joker
 function Card:calculate_joker(context)
+   if DV.contains(self.ability.name, DV.SIM.JOKERS_RANDOM) then
+	  if G.GAME.probabilities.normal < self.ability.extra then
+		 local p = G.GAME.probabilities.normal
+		 if DV.SIM.TYPE == 1 then
+			G.GAME.probabilities.normal = self.ability.extra
+		 elseif DV.SIM.TYPE == -1 then
+			G.GAME.probabilities.normal = 0
+		 end
+		 local ret = orig_eval_joker(self, context)
+		 G.GAME.probabilities.normal = p
+		 return ret
+	  end
+   end
+
    -- Breaks with joker-on-joker effects:
    -- if DV.contains(self.ability.name, DV.SIM.IGNORED) then
    --     return {}
@@ -433,11 +478,26 @@ function Card:calculate_joker(context)
    return orig_eval_joker(self, context)
 end
 
+local orig_pseudorandom = pseudorandom
+function pseudorandom(seed, min, max)
+   if seed == "lucky_mult" or seed == "lucky_money" then
+	  -- Need to return low for 100% chance and high for 0% chance,
+	  -- because the check is: pseudorandom(..) < G.GAME.probability.normal/chance
+	  if DV.SIM.TYPE == 1 then return 0
+	  elseif DV.SIM.TYPE == -1 then return 1e9
+	  end
+   end
+   return orig_pseudorandom(seed, min, max)
+end
+
 -- G.GAME.dollars are only incremented by ease_dollars(..)!
 -- If that changes, need to add G.GAME.dollars to saved state.
 local orig_dollars = ease_dollars
 function ease_dollars(mod, instant)
-   if DV.SIM.running then return end
+   if DV.SIM.running then
+	  DV.SIM.dollars = DV.SIM.dollars + mod
+	  return
+   end
    orig_dollars(mod, instant)
 end
 
