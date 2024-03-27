@@ -31,8 +31,8 @@ DV.SIM = {
 --       especially if they create/destroy/modify consumables or the deck.
 function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
    local ret = {
-	  score = {min = 0, max = 0},
-	  dollars = {min = 0, max = 0}
+      score = {min = 0, max = 0},
+      dollars = {min = 0, max = 0}
    }
 
    if #played_cards == 0 then return ret end
@@ -44,7 +44,7 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
       DV.SIM.TYPE = 0
       DV.SIM.eval(played_cards, held_cards, jokers, deck)
       ret.score.min = DV.SIM.get_total()
-	  ret.dollars.min = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
+      ret.dollars.min = G.GAME.dollar_buffer or 0
    else
       for x = 1, 2 do
          DV.SIM.TYPE = (x == 1 and -1 or 1)
@@ -52,13 +52,13 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
          DV.SIM.eval(played_cards, held_cards, jokers, deck)
 
          if DV.SIM.TYPE == -1 then
-			ret.score.min = DV.SIM.get_total()
-			ret.dollars.min = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
-		 end
+            ret.score.min = DV.SIM.get_total()
+            ret.dollars.min = G.GAME.dollar_buffer or 0
+         end
          if DV.SIM.TYPE ==  1 then
-			ret.score.max = DV.SIM.get_total()
-			ret.dollars.max = DV.SIM.dollars + (G.GAME.dollar_buffer or 0)
-		 end
+            ret.score.max = DV.SIM.get_total()
+            ret.dollars.min = G.GAME.dollar_buffer or 0
+         end
       end
    end
 
@@ -79,8 +79,8 @@ function DV.SIM.eval(played_cards, held_cards, jokers, deck)
    -- Run evaluation if hand is not debuffed:
    -- The last argument to debuff_hand() signifies that it is a CHECK, and doesn't update effects!
    if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name, true) then
-	  -- Check flag prevents this, so have to do manually:
-	  if G.GAME.blind.name == "The Ox" then ease_dollars(-G.GAME.dollars, true) end
+     -- Check flag prevents this, so have to do manually:
+      if G.GAME.blind.name == "The Ox" then G.GAME.dollar_buffer = G.GAME.dollar_buffer - G.GAME.dollars end
       -- 0. Effects from JOKERS that will run BEFORE evaluation (eg. levelling Spare Trousers):
       DV.SIM.eval_before_effects()
       -- 1. Set mult and chips to base hand values:
@@ -111,7 +111,7 @@ function DV.SIM.eval_scoring_hand()
          -- Collect repetitions from red seals:
          local eval = eval_card(scoring_card, DV.SIM.get_context(G.play, {repetition = true, repetition_only = true}))
          if next(eval) then
-            for h = 1, eval.seals.repetitions do
+            for _ = 1, eval.seals.repetitions do
                reps[#reps+1] = eval
             end
          end
@@ -120,14 +120,14 @@ function DV.SIM.eval_scoring_hand()
          for _, joker in ipairs(G.jokers.cards) do
             local eval = eval_card(joker, DV.SIM.get_context(G.play, {other_card = scoring_card, repetition = true}))
             if next(eval) and eval.jokers then
-               for h = 1, eval.jokers.repetitions do
+               for _ = 1, eval.jokers.repetitions do
                   reps[#reps+1] = eval
                end
             end
          end
 
          -- Evaluate and apply effects of jokers on played cards:
-         for j=1, #reps do
+         for _ = 1, #reps do
             -- Evaluation:
             local context = {cardarea = G.play, full_hand = DV.SIM.data.played_cards, scoring_hand = DV.SIM.data.scoring_hand, poker_hand = DV.SIM.data.scoring_name}
             local effects = {eval_card(scoring_card, context)}
@@ -183,7 +183,7 @@ function DV.SIM.eval_inhand_effects()
             -- Collect repetitions from red seal (in-hand):
             local eval = eval_card(held_card, DV.SIM.get_context(G.hand, {repetition = true, repetition_only = true, card_effects = effects}))
             if next(eval) and (next(effects[1]) or #effects > 1) then
-               for h = 1, eval.seals.repetitions do
+               for _ = 1, eval.seals.repetitions do
                   reps[#reps+1] = eval
                end
             end
@@ -192,7 +192,7 @@ function DV.SIM.eval_inhand_effects()
             for _, joker in ipairs(G.jokers.cards) do
                local eval = eval_card(joker, DV.SIM.get_context(G.hand, {other_card = held_card, repetition = true, card_effects = effects}))
                if next(eval) then
-                  for h = 1, eval.jokers.repetitions do
+                  for _ = 1, eval.jokers.repetitions do
                      reps[#reps+1] = eval
                   end
                end
@@ -270,21 +270,21 @@ end
 
 function DV.SIM.eval_before_effects()
    for _, joker in ipairs(G.jokers.cards) do
-	  if joker.ability.name == "Space Joker" then
-		 local should_level = false
-		 if DV.SIM.TYPE == 0 then
-			should_level = pseudorandom("space") < G.GAME.probabilities.normal/joker.ability.extra
-		 elseif DV.SIM.TYPE == 1 then
-			should_level = true
-		 elseif DV.SIM.TYPE == -1 then
-			should_level = (G.GAME.probabilities.normal >= joker.ability.extra)
-		 end
-		 if should_level then
-			local h = G.GAME.hands[DV.SIM.data.scoring_name]
-			DV.SIM.add_chips(h.l_chips)
-			DV.SIM.add_mult(h.l_mult)
-		 end
-	  end
+      if joker.ability.name == "Space Joker" then
+         local should_level = false
+         if DV.SIM.TYPE == 0 then
+            should_level = pseudorandom("space") < G.GAME.probabilities.normal/joker.ability.extra
+         elseif DV.SIM.TYPE == 1 then
+            should_level = true
+         elseif DV.SIM.TYPE == -1 then
+            should_level = (G.GAME.probabilities.normal >= joker.ability.extra)
+         end
+         if should_level then
+            local h = G.GAME.hands[DV.SIM.data.scoring_name]
+            DV.SIM.add_chips(h.l_chips)
+            DV.SIM.add_mult(h.l_mult)
+         end
+      end
       eval_card(joker, DV.SIM.get_context(G.jokers, {before = true}))
    end
 end
@@ -292,24 +292,23 @@ end
 function DV.SIM.prep_before_play()
    DV.SIM.chips = mod_chips(0)
    DV.SIM.mult = mod_mult(0)
-   DV.SIM.dollars = 0
    G.GAME.dollar_buffer = 0
 
    -- See Blind:press_play()
    if G.GAME.blind.name == "The Hook" then
       for i = 1, math.min(2, #G.hand.cards) do
-		 -- TODO: Simulate all possible combinations for true min-max?
-		 -- (consider when some cards in hand are steel and some are not)
+         -- TODO: Simulate all possible combinations for true min-max?
+         -- (consider when some cards in hand are steel and some are not)
          local selected_card, card_key = pseudorandom_element(G.hand.cards, pseudoseed('hook'))
          table.remove(G.hand.cards, card_key)
          for _, joker in ipairs(G.jokers.cards) do
-			if joker.ability.name ~= "Yorick" then
-			   joker:calculate_joker({discard = true, other_card = selected_card, full_hand = DV.SIM.data.played_cards})
-			end
+            if joker.ability.name ~= "Yorick" then
+               joker:calculate_joker({discard = true, other_card = selected_card, full_hand = DV.SIM.data.played_cards})
+            end
          end
       end
    elseif G.GAME.blind.name == "The Tooth" then
-	  DV.SIM.dollars = DV.SIM.dollars - #DV.SIM.data.played_cards
+      G.GAME.dollar_buffer = G.GAME.dollar_buffer - #DV.SIM.data.played_cards
    end
 
    local hand_info = G.GAME.hands[DV.SIM.data.scoring_name]
@@ -452,18 +451,18 @@ end
 local orig_eval_card = eval_card
 function eval_card(card, context)
    if DV.SIM.running and DV.contains(card.ability.name, DV.SIM.JOKERS_RANDOM) then
-	  local odds = (type(card.ability.extra) == "number" and card.ability.extra or card.ability.extra.odds)
-	  if G.GAME.probabilities.normal < odds then
-		 local p = G.GAME.probabilities.normal
-		 if DV.SIM.TYPE == 1 then
-			G.GAME.probabilities.normal = odds
-		 elseif DV.SIM.TYPE == -1 then
-			G.GAME.probabilities.normal = 0
-		 end
-		 local ret = orig_eval_card(card, context)
-		 G.GAME.probabilities.normal = p
-		 return ret
-	  end
+      local odds = (type(card.ability.extra) == "number" and card.ability.extra or card.ability.extra.odds)
+      if G.GAME.probabilities.normal < odds then
+         local p = G.GAME.probabilities.normal
+         if DV.SIM.TYPE == 1 then
+            G.GAME.probabilities.normal = odds
+         elseif DV.SIM.TYPE == -1 then
+            G.GAME.probabilities.normal = 0
+         end
+         local ret = orig_eval_card(card, context)
+         G.GAME.probabilities.normal = p
+         return ret
+      end
    end
 
    -- Breaks with joker-on-joker effects:
@@ -476,18 +475,18 @@ end
 local orig_eval_joker = Card.calculate_joker
 function Card:calculate_joker(context)
    if DV.SIM.running and DV.contains(self.ability.name, DV.SIM.JOKERS_RANDOM) then
-	  local odds = (type(self.ability.extra) == "number" and self.ability.extra or self.ability.extra.odds)
-	  if G.GAME.probabilities.normal < odds then
-		 local p = G.GAME.probabilities.normal
-		 if DV.SIM.TYPE == 1 then
-			G.GAME.probabilities.normal = odds
-		 elseif DV.SIM.TYPE == -1 then
-			G.GAME.probabilities.normal = 0
-		 end
-		 local ret = orig_eval_joker(self, context)
-		 G.GAME.probabilities.normal = p
-		 return ret
-	  end
+      local odds = (type(self.ability.extra) == "number" and self.ability.extra or self.ability.extra.odds)
+      if G.GAME.probabilities.normal < odds then
+         local p = G.GAME.probabilities.normal
+         if DV.SIM.TYPE == 1 then
+            G.GAME.probabilities.normal = odds
+         elseif DV.SIM.TYPE == -1 then
+            G.GAME.probabilities.normal = 0
+         end
+         local ret = orig_eval_joker(self, context)
+         G.GAME.probabilities.normal = p
+         return ret
+      end
    end
 
    -- Breaks with joker-on-joker effects:
@@ -500,12 +499,12 @@ end
 local orig_pseudorandom = pseudorandom
 function pseudorandom(seed, min, max)
    if DV.SIM.running and
-	  (seed == "lucky_mult" or seed == "lucky_money") then
-	  -- Need to return low for 100% chance and high for 0% chance,
-	  -- because the check is: pseudorandom(..) < G.GAME.probability.normal/chance
-	  if DV.SIM.TYPE == 1 then return 0
-	  elseif DV.SIM.TYPE == -1 then return 1e9
-	  end
+      (seed == "lucky_mult" or seed == "lucky_money") then
+     -- Need to return low for 100% chance and high for 0% chance,
+     -- because the check is: pseudorandom(..) < G.GAME.probability.normal/chance
+      if DV.SIM.TYPE == 1 then return 0
+      elseif DV.SIM.TYPE == -1 then return 1e9
+      end
    end
    return orig_pseudorandom(seed, min, max)
 end
@@ -514,10 +513,7 @@ end
 -- If that changes, need to add G.GAME.dollars to saved state.
 local orig_dollars = ease_dollars
 function ease_dollars(mod, instant)
-   if DV.SIM.running then
-	  DV.SIM.dollars = DV.SIM.dollars + mod
-	  return
-   end
+   if DV.SIM.running then return end
    orig_dollars(mod, instant)
 end
 
