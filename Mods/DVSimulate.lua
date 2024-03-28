@@ -37,9 +37,6 @@ function DV.SIM.run(played_cards, held_cards, jokers, deck, is_minmax)
 
    if #played_cards == 0 then return ret end
 
-   local play_to_simulate = DV.deep_copy(played_cards)
-   DV.SIM.set_parameters(play_to_simulate)
-
    if not is_minmax then
       DV.SIM.TYPE = 0
       DV.SIM.eval(played_cards, held_cards, jokers, deck)
@@ -70,6 +67,8 @@ end
 --
 
 function DV.SIM.eval(played_cards, held_cards, jokers, deck)
+   DV.SIM.set_parameters(DV.deep_copy(played_cards))
+
    DV.SIM.save_state(played_cards, held_cards, jokers, deck)
 
    -- Account for any forced changes before evaluation even begins:
