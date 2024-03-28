@@ -79,7 +79,9 @@ function DV.SIM.eval(played_cards, held_cards, jokers, deck)
    -- The last argument to debuff_hand() signifies that it is a CHECK, and doesn't update effects!
    if not G.GAME.blind:debuff_hand(DV.SIM.data.played_cards, DV.SIM.data.poker_hands, DV.SIM.data.scoring_name, true) then
      -- Check flag prevents this, so have to do manually:
-      if G.GAME.blind.name == "The Ox" then G.GAME.dollar_buffer = G.GAME.dollar_buffer - G.GAME.dollars end
+      if G.GAME.blind.name == "The Ox" and DV.SIM.data.scoring_name == G.GAME.current_round.most_played_poker_hand then
+		 G.GAME.dollar_buffer = G.GAME.dollar_buffer - G.GAME.dollars
+	  end
       -- 0. Effects from JOKERS that will run BEFORE evaluation (eg. levelling Spare Trousers):
       DV.SIM.eval_before_effects()
       -- 1. Set mult and chips to base hand values:
