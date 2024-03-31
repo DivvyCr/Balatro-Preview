@@ -492,6 +492,19 @@ function Card:calculate_joker(context)
       end
    end
 
+   -- Intercept and override DNA to avoid side-effects:
+   if DV.SIM.running and self.ability.name == "DNA" then
+	  if context.before
+		 and G.GAME.current_round.hands_played == 0
+		 and #context.full_hand == 1 then
+	     -- G.playing_card is the next UID for playing cards
+		 G.playing_card = (G.playing_card and G.playing_card + 1) or 1
+		 local c = copy_card(context.full_hand[1], nil, nil, G.playing_card)
+		 G.hand:emplace(c)
+	  end
+	  return
+   end
+
    -- Breaks with joker-on-joker effects:
    -- if DV.contains(self.ability.name, DV.SIM.IGNORED) then
    --     return {}
