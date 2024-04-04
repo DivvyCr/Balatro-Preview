@@ -50,3 +50,9 @@ Instead, I should hopefully work with other mod developers to make it as easy as
 It should be as easy as checking whether `DV.SIM` is defined and then creating custom advice for the `DV.SIM.run(..)` function.
 To be clear, this would be placed in the other mod.
 Unfortunately, this approach depends on the order in which mods are loaded, so if you know how to influence that, let me know by opening an issue.
+
+---
+
+<p align="center">
+<a href="https://www.buymeacoffee.com/divvyc" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+</p>
