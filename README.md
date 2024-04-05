@@ -9,7 +9,7 @@
 ## Installation
 
  0. Install [Steamodded](https://github.com/Steamopollys/Steamodded)
- 1. Download the latest release of this mod, [here](https://github.com/DivvyCr/dv-balatro/releases/latest).
+ 1. Download the latest release of this mod, [here](https://github.com/DivvyCr/Balatro-Preview/releases/latest).
  2. Copy the downloaded folder to `C:\Users\[USER]\AppData\Roaming\Balatro\`
  3. Launch the game!
 
