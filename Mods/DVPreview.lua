@@ -9,21 +9,21 @@ if not DV.SIM then DV.SIM = {} end
 
 if not G.SETTINGS.DV then
    G.SETTINGS.DV = {
-	  preview_score = true,
-	  preview_dollars = true,
-	  hide_face_down = true,
-	  show_min_max = false
+      preview_score = true,
+      preview_dollars = true,
+      hide_face_down = true,
+      show_min_max = false
    }
 end
 
 DV.PRE = {
    data = {
-	  score = {min = 0, max = 0},
-	  dollars = {min = 0, max = 0}
+      score = {min = 0, max = 0},
+      dollars = {min = 0, max = 0}
    },
    text = {
-	  score = {l = "", r = ""},
-	  dollars = {top = "", bot = ""}
+      score = {l = "", r = ""},
+      dollars = {top = "", bot = ""}
    },
    joker_order = {},
    hand_order = {}
@@ -197,9 +197,9 @@ end
 -- Return true if additional chips will beat the current blind; false otherwise.
 function DV.PRE.is_enough_to_win(chips)
    if G.GAME.blind and
-	  (G.STATE == G.STATES.SELECTING_HAND or
-	   G.STATE == G.STATES.DRAW_TO_HAND or
-	   G.STATE == G.STATES.PLAY_TAROT)
+      (G.STATE == G.STATES.SELECTING_HAND or
+       G.STATE == G.STATES.DRAW_TO_HAND or
+       G.STATE == G.STATES.PLAY_TAROT)
    then return (G.GAME.chips + chips >= G.GAME.blind.chips)
    else return false
    end
@@ -211,38 +211,38 @@ function G.FUNCS.dv_pre_score_UI_set(e)
    local should_juice = false
    if DV.PRE.data then
       if G.SETTINGS.DV.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
-		 -- Format as 'X - Y' :
-		 if e.config.id == "dv_pre_l" then
-			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min) .. " - "
-			if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
-		 elseif e.config.id == "dv_pre_r" then
-			new_preview_text = DV.PRE.format_number(DV.PRE.data.score.max)
-			if DV.PRE.is_enough_to_win(DV.PRE.data.score.max) then should_juice = true end
+         -- Format as 'X - Y' :
+         if e.config.id == "dv_pre_l" then
+            new_preview_text = DV.PRE.format_number(DV.PRE.data.score.min) .. " - "
+            if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
+         elseif e.config.id == "dv_pre_r" then
+            new_preview_text = DV.PRE.format_number(DV.PRE.data.score.max)
+            if DV.PRE.is_enough_to_win(DV.PRE.data.score.max) then should_juice = true end
          end
       else
-		 -- Format as single number:
-		 if e.config.id == "dv_pre_l" then
-			if G.SETTINGS.DV.show_min_max then
-			   -- Spaces around number necessary to distinguish Min/Max text from Exact text,
-			   -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
-			   new_preview_text = " " .. DV.PRE.format_number(DV.PRE.data.score.min) .. " "
-			else
-			   new_preview_text = number_format(DV.PRE.data.score.min)
-			end
-		 else
-			new_preview_text = ""
-		 end
-		 if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
+         -- Format as single number:
+         if e.config.id == "dv_pre_l" then
+            if G.SETTINGS.DV.show_min_max then
+               -- Spaces around number necessary to distinguish Min/Max text from Exact text,
+               -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
+               new_preview_text = " " .. DV.PRE.format_number(DV.PRE.data.score.min) .. " "
+            else
+               new_preview_text = number_format(DV.PRE.data.score.min)
+            end
+         else
+            new_preview_text = ""
+         end
+         if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
       end
    else
-	  -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
-	  if e.config.id == "dv_pre_l" then
-		 if G.SETTINGS.DV.show_min_max then new_preview_text = " ?????? "
-		 else new_preview_text = "??????"
-		 end
-	  else
-		 new_preview_text = ""
-	  end
+      -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
+      if e.config.id == "dv_pre_l" then
+         if G.SETTINGS.DV.show_min_max then new_preview_text = " ?????? "
+         else new_preview_text = "??????"
+         end
+      else
+         new_preview_text = ""
+      end
    end
 
    if (not DV.PRE.text.score[e.config.id:sub(-1)]) or new_preview_text ~= DV.PRE.text.score[e.config.id:sub(-1)] then
@@ -250,14 +250,14 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       e.config.object:update_text()
       -- Wobble:
       if not G.TAROT_INTERRUPT_PULSE then
-		 if should_juice
-		 then
-			G.FUNCS.text_super_juice(e, 5)
-			e.config.object.colours = {G.C.MONEY}
-		 else
-			G.FUNCS.text_super_juice(e, 0)
-			e.config.object.colours = {G.C.UI.TEXT_LIGHT}
-		 end
+         if should_juice
+         then
+            G.FUNCS.text_super_juice(e, 5)
+            e.config.object.colours = {G.C.MONEY}
+         else
+            G.FUNCS.text_super_juice(e, 0)
+            e.config.object.colours = {G.C.UI.TEXT_LIGHT}
+         end
       end
    end
 end
@@ -279,31 +279,31 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
    local new_preview_text = ""
    local new_colour = nil
    if DV.PRE.data then
-	  if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
-		 if e.config.id == "dv_pre_dollars_top" then
-			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
-			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
-		 elseif e.config.id == "dv_pre_dollars_bot" then
-			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
-			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
-		 end
-	  else
-		 if e.config.id == "dv_pre_dollars_top" then
-			new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
-			new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
-		 else
-			new_preview_text = ""
-			new_colour = DV.PRE.get_dollar_colour(0)
-		 end
-	  end
+      if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
+         if e.config.id == "dv_pre_dollars_top" then
+            new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
+            new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
+         elseif e.config.id == "dv_pre_dollars_bot" then
+            new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
+            new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+         end
+      else
+         if e.config.id == "dv_pre_dollars_top" then
+            new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
+            new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+         else
+            new_preview_text = ""
+            new_colour = DV.PRE.get_dollar_colour(0)
+         end
+      end
    else
-	  new_preview_text = " +??"
-	  new_colour = DV.PRE.get_dollar_colour(0)
+      new_preview_text = " +??"
+      new_colour = DV.PRE.get_dollar_colour(0)
    end
 
    if (not DV.PRE.text.dollars[e.config.id:sub(-3)]) or new_preview_text ~= DV.PRE.text.dollars[e.config.id:sub(-3)] then
       DV.PRE.text.dollars[e.config.id:sub(-3)] = new_preview_text
-	  e.config.object.colours = {new_colour}
+      e.config.object.colours = {new_colour}
       e.config.object:update_text()
       if not G.TAROT_INTERRUPT_PULSE then e.config.object:pulse(0.25) end
    end
@@ -351,16 +351,19 @@ function G.UIDEF.settings_tab(tab)
       if not G.HUD or not DV.PRE.enabled() then return end
 
       DV.PRE.data = DV.PRE.simulate()
-      if not G.SETTINGS.DV.show_min_max then
+
+      if G.SETTINGS.DV.preview_score then
+         if not G.SETTINGS.DV.show_min_max then
          -- Min-Max was just disabled, so increase scale:
-         G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
-         G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
-      else
+            G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
+            G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
+         else
          -- Min-Max was just enabled, so decrease scale:
-         G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.5
-         G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.5
+            G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.5
+            G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.5
+         end
+         G.HUD:recalculate()
       end
-      G.HUD:recalculate()
    end
 
    local contents = orig_settings(tab)
@@ -382,20 +385,20 @@ function DV.PRE.get_score_node()
    else text_scale = 0.75 end
 
    return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
-			  {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
               {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
    }}
 end
 
 function DV.PRE.get_dollars_node()
    return {n=G.UIT.C, config={id = "dv_pre_dollars", align = "cm"}, nodes={
-	   {n=G.UIT.R, config={align = "cm"}, nodes={
-		   {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
-	   }},
-	   {n=G.UIT.R, config={minh = 0.05}, nodes={}},
-	   {n=G.UIT.R, config={align = "cm"}, nodes={
-		   {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
-	   }}
+       {n=G.UIT.R, config={align = "cm"}, nodes={
+           {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
+       }},
+       {n=G.UIT.R, config={minh = 0.05}, nodes={}},
+       {n=G.UIT.R, config={align = "cm"}, nodes={
+           {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
+       }}
    }}
 end
 
