@@ -36,6 +36,7 @@ DV.SIM = {
 
    misc = {
       --- Table to store ancillary status variables:
+      next_stone_id = -1,
       yorick_tallied = false
    }
 }
@@ -277,7 +278,6 @@ function DV.SIM.simulate_blind_effects()
    if G.GAME.blind.disabled then return end
 
    if G.GAME.blind.name == "The Flint" then
-      -- TODO: Verify!
       local function flint(data)
          local half_chips = math.floor(data.chips/2 + 0.5)
          local half_mult = math.floor(data.mult/2 + 0.5)
@@ -1511,6 +1511,14 @@ function DV.SIM.is_suit(card_data, suit, ignore_debuff)
    return card_data.suit == suit
 end
 
+function DV.SIM.get_rank(card_data)
+   if card_data.ability.effect == "Stone Card" and not card_data.vampired then
+      DV.SIM.misc.next_stone_id = DV.SIM.misc.next_stone_id - 1
+      return DV.SIM.misc.next_stone_id
+   end
+   return card_data.rank
+end
+
 function DV.SIM.is_rank(card_data, ranks)
    if card_data.ability.effect == "Stone Card" then return false end
 
@@ -1560,4 +1568,28 @@ function DV.SIM.set_ability(card_data, center)
       perma_bonus = card_data.ability and card_data.ability.perma_bonus or 0,
       bonus = (card_data.ability.bonus or 0) + (center.config.bonus or 0)
    }
+end
+
+function DV.SIM.set_edition(card_data, edition)
+   card_data.edition = nil
+   if not edition then return end
+
+   if edition.holo then
+      if not card_data.edition then card_data.edition = {} end
+      card_data.edition.mult = G.P_CENTERS.e_holo.config.extra
+      card_data.edition.holo = true
+      card_data.edition.type = 'holo'
+   elseif edition.foil then
+      if not card_data.edition then card_data.edition = {} end
+      card_data.edition.chips = G.P_CENTERS.e_foil.config.extra
+      card_data.edition.foil = true
+      card_data.edition.type = 'foil'
+   elseif edition.polychrome then
+      if not card_data.edition then card_data.edition = {} end
+      card_data.edition.x_mult = G.P_CENTERS.e_polychrome.config.extra
+      card_data.edition.polychrome = true
+      card_data.edition.type = 'polychrome'
+   elseif edition.negative then
+      -- TODO
+   end
 end
