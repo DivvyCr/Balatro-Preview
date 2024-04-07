@@ -119,7 +119,7 @@ function DV.SIM.init()
    DV.SIM.env.jokers = {}
    for _, joker in ipairs(G.jokers.cards) do
       local joker_data = {
-         -- P_CENTER keys have the form x_NAME, get rid of x_
+         -- P_CENTER keys for jokers have the form j_NAME, get rid of j_
          id = joker.config.center.key:sub(3, #joker.config.center.key),
          ability = copy_table(joker.ability),
          edition = copy_table(joker.edition),
@@ -525,7 +525,9 @@ DV.SIM.JOKERS = {
          for _, joker in ipairs(DV.SIM.env.jokers) do
             if joker.ability.name == "Joker Stencil" then xmult = xmult + 1 end
          end
-         DV.SIM.x_mult(joker_obj.ability.x_mult)
+         if joker_obj.ability.x_mult > 1 then
+            DV.SIM.x_mult(joker_obj.ability.x_mult)
+         end
       end
    end,
    simulate_four_fingers = function(joker_obj, context)
@@ -877,9 +879,8 @@ DV.SIM.JOKERS = {
       if context.cardarea == G.jokers and context.before and not context.blueprint then
          local reset = true
          local play_more_than = (G.GAME.hands[context.scoring_name].played or 0)
-         for k, v in pairs(G.GAME.hands) do
-            -- TODO: Add visible to card_data?
-            if k ~= context.scoring_name and v.played >= play_more_than and v.visible then
+         for hand_name, hand in pairs(G.GAME.hands) do
+            if hand_name ~= context.scoring_name and hand.played >= play_more_than and hand.visible then
                reset = false
             end
          end
@@ -948,7 +949,9 @@ DV.SIM.JOKERS = {
    end,
    simulate_fortune_teller = function(joker_obj, context)
       if context.cardarea == G.jokers and context.global then
-         DV.SIM.add_mult(G.GAME.consumeable_usage_total.tarot)
+         if G.GAME.consumeable_usage_total and G.GAME.consumeable_usage_total.tarot then
+            DV.SIM.add_mult(G.GAME.consumeable_usage_total.tarot)
+         end
       end
    end,
    simulate_juggler = function(joker_obj, context)
@@ -1497,7 +1500,7 @@ end
 
 function DV.SIM.is_suit(card_data, suit, ignore_debuff)
    if card_data.debuff and not ignore_debuff then return end
-   if card_data.ability.effect == 'Stone Card' then
+   if card_data.ability.effect == "Stone Card" then
       return false
    end
    if card_data.ability.effect == "Wild Card" then
