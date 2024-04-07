@@ -650,14 +650,14 @@ DV.SIM.JOKERS = {
    end,
    simulate_even_steven = function(joker_obj, context)
       if context.cardarea == G.play and context.individual then
-         if not context.other_card.debuff and DV.SIM.check_rank_parity(card_data, true) then
+         if not context.other_card.debuff and DV.SIM.check_rank_parity(context.other_card, true) then
             DV.SIM.add_mult(joker_obj.ability.extra)
          end
       end
    end,
    simulate_odd_todd = function(joker_obj, context)
       if context.cardarea == G.play and context.individual then
-         if not context.other_card.debuff and DV.SIM.check_rank_parity(card_data, false) then
+         if not context.other_card.debuff and DV.SIM.check_rank_parity(context.other_card, false) then
             DV.SIM.add_chips(joker_obj.ability.extra)
          end
       end
