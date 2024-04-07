@@ -1561,3 +1561,21 @@ function DV.SIM.set_ability(card_data, center)
       bonus = (card_data.ability.bonus or 0) + (center.config.bonus or 0)
    }
 end
+
+--
+-- MISC:
+--
+
+-- Recursively copies table contents by value:
+function DV.deep_copy(obj, seen)
+   -- Must keep this property as a reference, because Vampire checks equality on it...
+   if obj == G.P_CENTERS.c_base then return obj end
+
+   if type(obj) ~= 'table' then return obj end
+   if seen and seen[obj] then return seen[obj] end
+   local s = seen or {}
+   local res = setmetatable({}, getmetatable(obj))
+   s[obj] = res
+   for k, v in pairs(obj) do res[DV.deep_copy(k, s)] = DV.deep_copy(v, s) end
+   return res
+end
