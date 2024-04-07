@@ -2,7 +2,7 @@
 --- MOD_NAME: Divvy's Preview
 --- MOD_ID: dvpreview
 --- MOD_AUTHOR: [Divvy C.]
---- MOD_DESCRIPTION: Preview each hand's score! v2.1
+--- MOD_DESCRIPTION: Preview each hand's score! v2.2
 
 if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
@@ -18,8 +18,8 @@ end
 
 DV.PRE = {
    data = {
-      score = {min = 0, max = 0},
-      dollars = {min = 0, max = 0}
+      score = {min = 0, exact = 0, max = 0},
+      dollars = {min = 0, exact = 0, max = 0}
    },
    text = {
       score = {l = "", r = ""},
@@ -38,7 +38,7 @@ function DV.PRE.simulate()
    if not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
            G.STATE == G.STATES.PLAY_TAROT)
-   then return {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
+   then return {score = {min = 0, exact = 0, max = 0}, dollars = {min = 0, exact = 0, max = 0}}
    end
 
    if G.SETTINGS.DV.hide_face_down then
@@ -47,17 +47,7 @@ function DV.PRE.simulate()
       end
    end
 
-   return DV.SIM.run(G.hand.highlighted, DV.PRE.get_held_cards(), G.jokers.cards, G.deck, G.SETTINGS.DV.show_min_max)
-end
-
-function DV.PRE.get_held_cards()
-   local sim_hand = {}
-   for _, sim_card in ipairs(DV.deep_copy(G.hand.cards)) do
-      if not sim_card.highlighted then
-         table.insert(sim_hand, sim_card)
-      end
-   end
-   return sim_hand
+   return DV.SIM.run()
 end
 
 --
@@ -152,7 +142,7 @@ end
 
 function DV.PRE.add_reset_event(trigger)
    function reset_func()
-      DV.PRE.data = {score = {min = 0, max = 0}, dollars = {min = 0, max = 0}}
+      DV.PRE.data = {score = {min = 0, exact = 0, max = 0}, dollars = {min = 0, exact = 0, max = 0}}
       return true
    end
    if DV.PRE.enabled() then
@@ -226,13 +216,14 @@ function G.FUNCS.dv_pre_score_UI_set(e)
                -- Spaces around number necessary to distinguish Min/Max text from Exact text,
                -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
                new_preview_text = " " .. DV.PRE.format_number(DV.PRE.data.score.min) .. " "
+               if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
             else
-               new_preview_text = number_format(DV.PRE.data.score.min)
+               new_preview_text = number_format(DV.PRE.data.score.exact)
+               if DV.PRE.is_enough_to_win(DV.PRE.data.score.exact) then should_juice = true end
             end
          else
             new_preview_text = ""
          end
-         if DV.PRE.is_enough_to_win(DV.PRE.data.score.min) then should_juice = true end
       end
    else
       -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
@@ -289,8 +280,10 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
          end
       else
          if e.config.id == "dv_pre_dollars_top" then
-            new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.min) .. DV.PRE.data.dollars.min
-            new_colour = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+            local _data = (G.SETTINGS.DV.show_min_max) and DV.PRE.data.dollars.min or DV.PRE.data.dollars.exact
+
+            new_preview_text = " " .. DV.PRE.get_sign_str(_data) .. _data
+            new_colour = DV.PRE.get_dollar_colour(_data)
          else
             new_preview_text = ""
             new_colour = DV.PRE.get_dollar_colour(0)
@@ -354,11 +347,11 @@ function G.UIDEF.settings_tab(tab)
 
       if G.SETTINGS.DV.preview_score then
          if not G.SETTINGS.DV.show_min_max then
-         -- Min-Max was just disabled, so increase scale:
+            -- Min-Max was just disabled, so increase scale:
             G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
             G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
          else
-         -- Min-Max was just enabled, so decrease scale:
+            -- Min-Max was just enabled, so decrease scale:
             G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.5
             G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.5
          end

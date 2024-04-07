@@ -2,7 +2,7 @@
 --- MOD_NAME: Divvy's Simulation
 --- MOD_ID: dvsimulate
 --- MOD_AUTHOR: [Divvy C.]
---- MOD_DESCRIPTION: A utility mod to simulate selected hand. v2.1
+--- MOD_DESCRIPTION: A utility mod to simulate selected hand. v2.2
 --- PRIORITY: -80
 
 if not DV then DV = {} end
