@@ -2,7 +2,7 @@
 --- MOD_NAME: Divvy's Preview
 --- MOD_ID: dvpreview
 --- MOD_AUTHOR: [Divvy C.]
---- MOD_DESCRIPTION: Preview each hand's score! v2.2
+--- MOD_DESCRIPTION: Preview each hand's score! v2.2.1
 
 if not DV then DV = {} end
 if not DV.SIM then DV.SIM = {} end
