@@ -2,7 +2,7 @@
 --- MOD_NAME: Divvy's Simulation
 --- MOD_ID: dvsimulate
 --- MOD_AUTHOR: [Divvy C.]
---- MOD_DESCRIPTION: A utility mod to simulate selected hand. v2.2
+--- MOD_DESCRIPTION: A utility mod to simulate selected hand. v2.2.1
 --- PRIORITY: -80
 
 if not DV then DV = {} end
@@ -123,7 +123,8 @@ function DV.SIM.init()
          id = joker.config.center.key:sub(3, #joker.config.center.key),
          ability = copy_table(joker.ability),
          edition = copy_table(joker.edition),
-         rarity = joker.config.center.rarity
+         rarity = joker.config.center.rarity,
+         debuff = joker.debuff
       }
       table.insert(DV.SIM.env.jokers, joker_data)
    end
