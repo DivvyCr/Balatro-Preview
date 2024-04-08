@@ -318,7 +318,7 @@ function DV.SIM.simulate_blind_debuffs()
 
    if blind_obj.name == "The Hook" then
       blind_obj.triggered = true
-      for _ = 1, math.min(2, #G.hand.cards) do
+      for _ = 1, math.min(2, #DV.SIM.env.held_cards) do
          -- TODO: Identify cards-in-hand that can affect score, simulate with/without them for min/max
          local selected_card, card_key = pseudorandom_element(DV.SIM.env.held_cards, pseudoseed('hook'))
          table.remove(DV.SIM.env.held_cards, card_key)
