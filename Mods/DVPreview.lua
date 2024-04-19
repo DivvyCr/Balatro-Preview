@@ -42,11 +42,11 @@ function DV.PRE.simulate()
    end
 
    if G.SETTINGS.DV.hide_face_down then
-      if G.GAME.blind.name == "Amber Acorn" and #(G.jokers.cards) ~= 0 then 
-        return nil 
-      end
       for _, card in ipairs(G.hand.highlighted) do
          if card.facing == "back" then return nil end
+         if G.GAME.blind.name == "Amber Acorn" and #(G.jokers.cards) > 0 then 
+           return nil
+         end
       end
       if #(G.hand.highlighted) ~= 0 then
         for _, joker in ipairs(G.jokers.cards) do
