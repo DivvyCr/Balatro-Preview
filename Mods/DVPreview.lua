@@ -45,6 +45,11 @@ function DV.PRE.simulate()
       for _, card in ipairs(G.hand.highlighted) do
          if card.facing == "back" then return nil end
       end
+      if #(G.hand.highlighted) ~= 0 then
+        for _, joker in ipairs(G.jokers.cards) do
+          if joker.facing == "back" then return nil end
+        end
+      end
    end
 
    return DV.SIM.run()
@@ -384,13 +389,20 @@ function DV.PRE.get_score_node()
 end
 
 function DV.PRE.get_dollars_node()
+   local top_color = DV.PRE.get_dollar_colour(0)
+   local bot_color = top_color
+   if DV.PRE.data ~= nil then 
+      top_color = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
+      bot_color = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+   else 
+   end
    return {n=G.UIT.C, config={id = "dv_pre_dollars", align = "cm"}, nodes={
        {n=G.UIT.R, config={align = "cm"}, nodes={
-           {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
+           {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {top_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
        }},
        {n=G.UIT.R, config={minh = 0.05}, nodes={}},
        {n=G.UIT.R, config={align = "cm"}, nodes={
-           {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
+           {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {bot_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
        }}
    }}
 end
