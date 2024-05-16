@@ -50,11 +50,6 @@ function DV.PRE.simulate()
           if joker.facing == "back" then return nil end
         end
       end
-      if #(G.hand.highlighted) ~= 0 then
-        for _, joker in ipairs(G.jokers.cards) do
-          if joker.facing == "back" then return nil end
-        end
-      end
    end
 
    return DV.SIM.run()
