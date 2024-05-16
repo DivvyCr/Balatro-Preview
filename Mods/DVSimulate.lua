@@ -346,8 +346,8 @@ function DV.SIM.simulate_blind_debuffs()
          -- NOTE: Important to save/restore G.GAME.hands for this:
          local played_hand_data = G.GAME.hands[played_hand_name]
          played_hand_data.level = math.max(1, played_hand_data.level - 1)
-			played_hand_data.mult = played_hand_data.s_mult + (played_hand_data.level - 1) * played_hand_data.l_mult
-			played_hand_data.chips = played_hand_data.s_chips + (played_hand_data.level - 1) * played_hand_data.l_chips
+		 played_hand_data.mult = played_hand_data.s_mult + (played_hand_data.level - 1) * played_hand_data.l_mult
+		 played_hand_data.chips = played_hand_data.s_chips + (played_hand_data.level - 1) * played_hand_data.l_chips
       end
       return false -- IMPORTANT: Avoid duplicate effects from Blind:debuff_hand() below
    end
@@ -1585,7 +1585,7 @@ function DV.SIM.set_ability(card_data, center)
       order = center.order or nil,
       forced_selection = card_data.ability and card_data.ability.forced_selection or nil,
       perma_bonus = card_data.ability and card_data.ability.perma_bonus or 0,
-		bonus = (center.config.bonus or 0),
+      bonus = (center.config.bonus or 0),
    }
 end
 
