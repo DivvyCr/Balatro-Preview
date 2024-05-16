@@ -1472,15 +1472,33 @@ function DV.SIM.adjust_field_with_range(adj_func, field, mod_func, exact_value, 
 end
 
 function DV.SIM.add_chips(exact, min, max)
-   DV.SIM.adjust_field_with_range(function(x, y) return x + y end, "chips", mod_chips, exact, min, max)
+	DV.SIM.adjust_field_with_range(function(x, y)
+		if y >= 0 then
+			return x + y
+		else
+			return x
+		end
+	end, "chips", mod_chips, exact, min, max)
 end
 
 function DV.SIM.add_mult(exact, min, max)
-   DV.SIM.adjust_field_with_range(function(x, y) return x + y end, "mult", mod_mult, exact, min, max)
+	DV.SIM.adjust_field_with_range(function(x, y)
+		if y >= 0 then
+			return x + y
+		else
+			return x
+		end
+	end, "mult", mod_mult, exact, min, max)
 end
 
 function DV.SIM.x_mult(exact, min, max)
-   DV.SIM.adjust_field_with_range(function(x, y) return x * y end, "mult", mod_mult, exact, min, max)
+	DV.SIM.adjust_field_with_range(function(x, y)
+		if y >= 1 then
+			return x * y
+		else
+			return x
+		end
+	end, "mult", mod_mult, exact, min, max)
 end
 
 function DV.SIM.add_dollars(exact, min, max)
