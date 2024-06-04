@@ -923,7 +923,10 @@ DV.SIM.JOKERS = {
    end,
    simulate_erosion = function(joker_obj, context)
       if context.cardarea == G.jokers and context.global then
-         DV.SIM.add_mult(joker_obj.ability.extra * (G.GAME.starting_deck_size - #G.playing_cards))
+         local diff = G.GAME.starting_deck_size - #G.playing_cards
+         if (diff) > 0 then
+            DV.SIM.add_mult(joker_obj.ability.extra * diff)
+         end
       end
    end,
    simulate_reserved_parking = function(joker_obj, context)
