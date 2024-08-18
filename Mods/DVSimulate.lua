@@ -2,7 +2,7 @@
 --- MOD_NAME: Divvy's Simulation
 --- MOD_ID: dvsimulate
 --- MOD_AUTHOR: [Divvy C.]
---- MOD_DESCRIPTION: A utility mod to simulate selected hand. v2.2.1
+--- MOD_DESCRIPTION: A utility mod to simulate selected hand. v2.5
 --- PRIORITY: -80
 
 if not DV then DV = {} end
@@ -47,10 +47,10 @@ function DV.SIM.run()
    DV.SIM.init()
 
    DV.SIM.manage_state("SAVE")
+   DV.SIM.update_state_variables()
 
    if not DV.SIM.simulate_blind_debuffs() then
       DV.SIM.simulate_joker_before_effects()
-      DV.SIM.update_state_variables()
       DV.SIM.add_base_chips_and_mult()
       DV.SIM.simulate_blind_effects()
       DV.SIM.simulate_scoring_cards()
@@ -343,11 +343,12 @@ function DV.SIM.simulate_blind_debuffs()
       local played_hand_name = DV.SIM.env.scoring_name
       if G.GAME.hands[played_hand_name].level > 1 then
          blind_obj.triggered = true
-         -- NOTE: Important to save/restore G.GAME.hands for this:
+         -- NOTE: Important to save/restore G.GAME.hands here
+         -- NOTE: Implementation mirrors level_up_hand(..)
          local played_hand_data = G.GAME.hands[played_hand_name]
          played_hand_data.level = math.max(1, played_hand_data.level - 1)
-         played_hand_data.mult = math.max(1, played_hand_data.s_mult + played_hand_data.level * played_hand_data.l_mult)
-         played_hand_data.chips = math.max(0, played_hand_data.s_chips + played_hand_data.level * played_hand_data.l_chips)
+         played_hand_data.mult  = math.max(1, played_hand_data.s_mult  + (played_hand_data.level-1) * played_hand_data.l_mult)
+         played_hand_data.chips = math.max(0, played_hand_data.s_chips + (played_hand_data.level-1) * played_hand_data.l_chips)
       end
       return false -- IMPORTANT: Avoid duplicate effects from Blind:debuff_hand() below
    end
