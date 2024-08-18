@@ -29,8 +29,6 @@ DV.SIM = {
    orig = {
       --- Table to store game data that gets modified during simulation:
       random_data = {}, -- G.GAME.pseudorandom
-      hands_played = 0, -- G.GAME.current_round.hands_played
-      hands_left = 0,   -- G.GAME.current_round.hands_left
       hand_data = {}    -- G.GAME.hands
    },
 
@@ -192,26 +190,18 @@ function DV.SIM.manage_state(save_or_restore)
 
    if save_or_restore == "SAVE" then
       DVSO.random_data = copy_table(G.GAME.pseudorandom)
-      DVSO.hands_played = G.GAME.current_round.hands_played
-      DVSO.hands_left = G.GAME.current_round.hands_left
       DVSO.hand_data = copy_table(G.GAME.hands)
       return
    end
 
    if save_or_restore == "RESTORE" then
       G.GAME.pseudorandom = DVSO.random_data
-      G.GAME.current_round.hands_played = DVSO.hands_played
-      G.GAME.current_round.hands_left = DVSO.hands_left
       G.GAME.hands = DVSO.hand_data
       return
    end
 end
 
 function DV.SIM.update_state_variables()
-   -- Increment hands played this round:
-   G.GAME.current_round.hands_played = G.GAME.current_round.hands_played + 1
-   G.GAME.current_round.hands_left = G.GAME.current_round.hands_left - 1
-
    -- Increment poker hand played this run/round:
    local hand_info = G.GAME.hands[DV.SIM.env.scoring_name]
    hand_info.played = hand_info.played + 1
