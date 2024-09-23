@@ -322,7 +322,7 @@ function DV.SIM.simulate_blind_debuffs()
 
    if blind_obj.name == "The Tooth" then
       blind_obj.triggered = true
-      DV.SIM.add_dollars((-1) * #DV.SIM.env.scoring_cards)
+      DV.SIM.add_dollars((-1) * #DV.SIM.env.played_cards)
    end
 
    -- The following are part of Blind:debuff_hand(..)
@@ -575,7 +575,8 @@ DV.SIM.JOKERS = {
    end,
    simulate_dusk = function(joker_obj, context)
       if context.cardarea == G.play and context.repetition then
-         if G.GAME.current_round.hands_left == 0 then
+         -- Note: Checking against 1 is needed as hands_left is not decremented as part of simulation
+         if G.GAME.current_round.hands_left == 1 then
             DV.SIM.add_reps(joker_obj.ability.extra)
          end
       end
@@ -1089,7 +1090,8 @@ DV.SIM.JOKERS = {
    end,
    simulate_acrobat = function(joker_obj, context)
       if context.cardarea == G.jokers and context.global then
-         if G.GAME.current_round.hands_left == 0 then
+         -- Note: Checking against 1 is needed as hands_left is not decremented as part of simulation
+         if G.GAME.current_round.hands_left == 1 then
             DV.SIM.x_mult(joker_obj.ability.extra)
          end
       end
@@ -1490,12 +1492,12 @@ end
 -- MISC:
 --
 
-function DV.SIM.is_suit(card_data, suit, ignore_debuff)
-   if card_data.debuff and not ignore_debuff then return end
+function DV.SIM.is_suit(card_data, suit, ignore_scorability)
+   if card_data.debuff and not ignore_scorability then return end
    if card_data.ability.effect == "Stone Card" then
       return false
    end
-   if card_data.ability.effect == "Wild Card" then
+   if card_data.ability.effect == "Wild Card" and not card_data.debuff then
       return true
    end
    if next(find_joker("Smeared Joker")) then
