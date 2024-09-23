@@ -1176,6 +1176,8 @@ DV.SIM.JOKERS = {
          -- Account for all 'real' suits:
          for _, card in ipairs(context.scoring_hand) do
             if card.ability.effect ~= "Wild Card" then
+               -- Note: Faithful simulation demands that debuffed 'real'-suited cards are counted.
+               -- Yes, this is inconsistent with Seeing Double.
                if     DV.SIM.is_suit(card, "Hearts", true)   and suit_count["Hearts"] == 0   then inc_suit("Hearts")
                elseif DV.SIM.is_suit(card, "Diamonds", true) and suit_count["Diamonds"] == 0 then inc_suit("Diamonds")
                elseif DV.SIM.is_suit(card, "Spades", true)   and suit_count["Spades"] == 0   then inc_suit("Spades")
@@ -1186,6 +1188,10 @@ DV.SIM.JOKERS = {
 
          -- Let Wild Cards fill in the gaps:
          for _, card in ipairs(context.scoring_hand) do
+            -- Note: Faithful simulation demands that debuffed Wild Cards, unlike 'real'-suited cards, are NEVER counted.
+            -- Not even for their base suits, unlike Blackboard.
+            -- So, in total, Flower Pot's behavior is inconsistent with three different jokers, one of which is ITSELF.
+            -- This makes for a convincing argument that Flower Pot's existence was only meant as a practical joke.
             if card.ability.effect == "Wild Card" then
                if     DV.SIM.is_suit(card, "Hearts")   and suit_count["Hearts"] == 0   then inc_suit("Hearts")
                elseif DV.SIM.is_suit(card, "Diamonds") and suit_count["Diamonds"] == 0 then inc_suit("Diamonds")
