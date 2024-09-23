@@ -575,7 +575,8 @@ DV.SIM.JOKERS = {
    end,
    simulate_dusk = function(joker_obj, context)
       if context.cardarea == G.play and context.repetition then
-         if G.GAME.current_round.hands_left == 0 then
+         -- Note: Checking against 1 is needed as hands_left is not decremented as part of simulation
+         if G.GAME.current_round.hands_left == 1 then
             DV.SIM.add_reps(joker_obj.ability.extra)
          end
       end
@@ -1089,7 +1090,8 @@ DV.SIM.JOKERS = {
    end,
    simulate_acrobat = function(joker_obj, context)
       if context.cardarea == G.jokers and context.global then
-         if G.GAME.current_round.hands_left == 0 then
+         -- Note: Checking against 1 is needed as hands_left is not decremented as part of simulation
+         if G.GAME.current_round.hands_left == 1 then
             DV.SIM.x_mult(joker_obj.ability.extra)
          end
       end
