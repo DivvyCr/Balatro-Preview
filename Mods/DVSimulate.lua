@@ -1492,12 +1492,12 @@ end
 -- MISC:
 --
 
-function DV.SIM.is_suit(card_data, suit, ignore_debuff)
-   if card_data.debuff and not ignore_debuff then return end
+function DV.SIM.is_suit(card_data, suit, ignore_scorability)
+   if card_data.debuff and not ignore_scorability then return end
    if card_data.ability.effect == "Stone Card" then
       return false
    end
-   if card_data.ability.effect == "Wild Card" then
+   if card_data.ability.effect == "Wild Card" and not card_data.debuff then
       return true
    end
    if next(find_joker("Smeared Joker")) then
