@@ -322,7 +322,7 @@ function DV.SIM.simulate_blind_debuffs()
 
    if blind_obj.name == "The Tooth" then
       blind_obj.triggered = true
-      DV.SIM.add_dollars((-1) * #DV.SIM.env.scoring_cards)
+      DV.SIM.add_dollars((-1) * #DV.SIM.env.played_cards)
    end
 
    -- The following are part of Blind:debuff_hand(..)
