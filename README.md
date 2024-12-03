@@ -17,9 +17,13 @@
 
 ## :point_right: Installation
 
- 0. Install [Steamodded](https://github.com/Steamopollys/Steamodded)
+ 0. Install [Lovely](https://github.com/ethangreen-dev/lovely-injector)<br>
+   Do you have Steamodded? Then, you probably already have Lovely!
  1. Download the latest release of this mod, [here](https://github.com/DivvyCr/Balatro-Preview/releases/latest).
- 2. Copy the downloaded folder to `C:\Users\[USER]\AppData\Roaming\Balatro\`
+ 2. Unzip the downloaded folder to `C:\Users\[USER]\AppData\Roaming\Balatro\Mods`<br>
+   You should have:<br>
+   `...\Balatro\Mods\DVPreview`<br>
+   `...\Balatro\Mods\DVSimulate`<br>
  3. Launch the game!
 
 ## :point_right: Features
