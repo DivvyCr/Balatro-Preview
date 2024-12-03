@@ -22,12 +22,12 @@ sources = [ "Init.lua" ]
 target = "main.lua"
 position = "append"
 sources = [
-  "Core.lua"
+  "Core.lua",
   "Utils.lua"
 ]
 
 [[patches]]
 [patches.copy]
-target = "function/UI_definitions.lua"
+target = "functions/UI_definitions.lua"
 position = "append"
 sources = [ "Interface.lua" ]
