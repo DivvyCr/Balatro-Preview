@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/latest-v2.2-blue.svg)
+![Version](https://img.shields.io/badge/latest-v3.0-blue.svg)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DivvyCr/Balatro-Preview/total?color=brightgreen)
 ![GitHub License](https://img.shields.io/github/license/DivvyCR/Balatro-Preview?color=blue)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/DivvyCr/Balatro-Preview)
