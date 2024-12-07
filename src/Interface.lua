@@ -18,10 +18,42 @@ function create_UIBox_HUD()
    return contents
 end
 
--- Append toggle option to settings:
-local orig_settings = G.UIDEF.settings_tab
-function G.UIDEF.settings_tab(tab)
-   function preview_score_toggle_callback(e)
+function DV.PRE.get_score_node()
+   local text_scale = nil
+   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
+   else text_scale = 0.75 end
+
+   return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
+              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+   }}
+end
+
+function DV.PRE.get_dollars_node()
+   local top_color = DV.PRE.get_dollar_colour(0)
+   local bot_color = top_color
+   if DV.PRE.data ~= nil then
+      top_color = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
+      bot_color = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
+   else
+   end
+   return {n=G.UIT.C, config={id = "dv_pre_dollars", align = "cm"}, nodes={
+       {n=G.UIT.R, config={align = "cm"}, nodes={
+           {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {top_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
+       }},
+       {n=G.UIT.R, config={minh = 0.05}, nodes={}},
+       {n=G.UIT.R, config={align = "cm"}, nodes={
+           {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {bot_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
+       }}
+   }}
+end
+
+--
+-- SETTINGS:
+--
+
+function DV.get_preview_settings_page()
+   local function preview_score_toggle_callback(e)
       if not G.HUD then return end
 
       if G.SETTINGS.DV.preview_score then
@@ -35,7 +67,7 @@ function G.UIDEF.settings_tab(tab)
       G.HUD:recalculate()
    end
 
-   function preview_dollars_toggle_callback(_)
+   local function preview_dollars_toggle_callback(_)
       if not G.HUD then return end
 
       if G.SETTINGS.DV.preview_dollars then
@@ -49,14 +81,14 @@ function G.UIDEF.settings_tab(tab)
       G.HUD:recalculate()
    end
 
-   function face_down_toggle_callback(_)
+   local function face_down_toggle_callback(_)
       if not G.HUD then return end
 
       DV.PRE.data = DV.PRE.simulate()
       G.HUD:recalculate()
    end
 
-   function minmax_toggle_callback(_)
+   local function minmax_toggle_callback(_)
       if not G.HUD or not DV.PRE.enabled() then return end
 
       DV.PRE.data = DV.PRE.simulate()
@@ -75,45 +107,25 @@ function G.UIDEF.settings_tab(tab)
       end
    end
 
-   local contents = orig_settings(tab)
-   if tab == 'Game' then
-      local preview_setting_nodes = {n = G.UIT.R, config = {align = "cm"}, nodes ={
-                                        create_toggle({id = "score_toggle", label = "Enable Score Preview", ref_table = G.SETTINGS.DV, ref_value = "preview_score", callback = preview_score_toggle_callback}),
-                                        create_toggle({id = "dollars_toggle", label = "Enable Money Preview", ref_table = G.SETTINGS.DV, ref_value = "preview_dollars", callback = preview_dollars_toggle_callback}),
-                                        create_toggle({label = "Show Min/Max Preview Instead of Exact", ref_table = G.SETTINGS.DV, ref_value = "show_min_max", callback = minmax_toggle_callback}),
-                                        create_toggle({label = "Hide Preview if Any Card is Face-Down", ref_table = G.SETTINGS.DV, ref_value = "hide_face_down", callback = face_down_toggle_callback})
-                                    }}
-      table.insert(contents.nodes, preview_setting_nodes)
-   end
-   return contents
-end
-
-function DV.PRE.get_score_node()
-   local text_scale = nil
-   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
-   else text_scale = 0.75 end
-
-   return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
-              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
-              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
-   }}
-end
-
-function DV.PRE.get_dollars_node()
-   local top_color = DV.PRE.get_dollar_colour(0)
-   local bot_color = top_color
-   if DV.PRE.data ~= nil then 
-      top_color = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.max)
-      bot_color = DV.PRE.get_dollar_colour(DV.PRE.data.dollars.min)
-   else 
-   end
-   return {n=G.UIT.C, config={id = "dv_pre_dollars", align = "cm"}, nodes={
-       {n=G.UIT.R, config={align = "cm"}, nodes={
-           {n=G.UIT.O, config={id = "dv_pre_dollars_top", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "top"}}, colours = {top_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}}
-       }},
-       {n=G.UIT.R, config={minh = 0.05}, nodes={}},
-       {n=G.UIT.R, config={align = "cm"}, nodes={
-           {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {bot_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
-       }}
-   }}
+   return
+      {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
+          create_toggle({id = "score_toggle",
+                         label = "Enable Score Preview",
+                         ref_table = G.SETTINGS.DV,
+                         ref_value = "preview_score",
+                         callback = preview_score_toggle_callback}),
+          create_toggle({id = "dollars_toggle",
+                         label = "Enable Money Preview",
+                         ref_table = G.SETTINGS.DV,
+                         ref_value = "preview_dollars",
+                         callback = preview_dollars_toggle_callback}),
+          create_toggle({label = "Show Min/Max Preview Instead of Exact",
+                         ref_table = G.SETTINGS.DV,
+                         ref_value = "show_min_max",
+                         callback = minmax_toggle_callback}),
+          create_toggle({label = "Hide Preview if Any Card is Face-Down",
+                         ref_table = G.SETTINGS.DV,
+                         ref_value = "hide_face_down",
+                         callback = face_down_toggle_callback})
+      }}
 end
