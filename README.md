@@ -22,6 +22,7 @@
    You should have:<br>
    `...\Balatro\Mods\DVPreview`<br>
    `...\Balatro\Mods\DVSimulate`<br>
+   `...\Balatro\Mods\DVSettings`<br>
  3. Launch the game!
 
 ## :point_right: Features
