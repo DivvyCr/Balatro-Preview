@@ -22,10 +22,12 @@ function Game:start_up()
    DV.PRE._start_up(self)
 
    if not G.SETTINGS.DV then G.SETTINGS.DV = {} end
-   G.SETTINGS.DV.preview_score = true
-   G.SETTINGS.DV.preview_dollars = true
-   G.SETTINGS.DV.hide_face_down = true
-   G.SETTINGS.DV.show_min_max = false
+   if not G.SETTINGS.DV.preview_score then
+      G.SETTINGS.DV.preview_score = true
+      G.SETTINGS.DV.preview_dollars = true
+      G.SETTINGS.DV.hide_face_down = true
+      G.SETTINGS.DV.show_min_max = false
+   end
 
    if not DV.settings then error("Divvy's Preview requires Divvy's Setting tools; re-install Divvy's Preview mod and double-check that there is a 'DVSettings' folder") end
    G.DV.options["Score Preview"] = "get_preview_settings_page"
