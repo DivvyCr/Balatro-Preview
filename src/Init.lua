@@ -22,7 +22,9 @@ function Game:start_up()
    DV.PRE._start_up(self)
 
    if not G.SETTINGS.DV then G.SETTINGS.DV = {} end
-   if not G.SETTINGS.DV.preview_score then
+   if not G.SETTINGS.DV.PRE then
+      G.SETTINGS.DV.PRE = true
+
       G.SETTINGS.DV.preview_score = true
       G.SETTINGS.DV.preview_dollars = true
       G.SETTINGS.DV.hide_face_down = true
