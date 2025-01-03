@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/latest-v3.0-blue.svg)
+![Version](https://img.shields.io/badge/latest-v3.2-blue.svg)
 ![GitHub License](https://img.shields.io/github/license/DivvyCR/Balatro-Preview?color=blue)
 
 </div>
@@ -60,13 +60,3 @@ By default, this mod **only simulates vanilla jokers**. To support modded jokers
 ### :arrow_forward: How to make your mod compatible?
 
 See [Divvy's Simulation](https://github.com/DivvyCr/Balatro-Simulation?tab=readme-ov-file#how-to-add-modded-jokers)
-
----
-
-<p align="center">
-<b>If you found this mod useful, consider supporting me!</b>
-</p>
-
-<p align="center">
-<a href="https://www.buymeacoffee.com/divvyc" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-</p>
