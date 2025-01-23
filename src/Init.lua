@@ -29,6 +29,7 @@ function Game:start_up()
       G.SETTINGS.DV.preview_dollars = true
       G.SETTINGS.DV.hide_face_down = true
       G.SETTINGS.DV.show_min_max = false
+      G.SETTINGS.DV.manual_preview = false
    end
 
    if not DV.settings then error("Divvy's Preview requires Divvy's Setting tools; re-install Divvy's Preview mod and double-check that there is a 'DVSettings' folder") end

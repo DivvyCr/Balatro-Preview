@@ -8,7 +8,13 @@ function create_UIBox_HUD()
    local contents = orig_hud()
 
    local score_node_wrap = {n=G.UIT.R, config={id = "dv_pre_score_wrap", align = "cm", padding = 0.1}, nodes={}}
-   if G.SETTINGS.DV.preview_score then table.insert(score_node_wrap.nodes, DV.PRE.get_score_node()) end
+   if G.SETTINGS.DV.preview_score then
+      if G.SETTINGS.DV.manual_preview then
+         table.insert(score_node_wrap.nodes, DV.PRE.get_manual_preview_button())
+      else
+         table.insert(score_node_wrap.nodes, DV.PRE.get_score_node())
+      end
+   end
    table.insert(contents.nodes[1].nodes[1].nodes[4].nodes[1].nodes, score_node_wrap)
 
    local dollars_node_wrap = {n=G.UIT.C, config={id = "dv_pre_dollars_wrap", align = "cm"}, nodes={}}
@@ -45,6 +51,14 @@ function DV.PRE.get_dollars_node()
        {n=G.UIT.R, config={align = "cm"}, nodes={
            {n=G.UIT.O, config={id = "dv_pre_dollars_bot", func = "dv_pre_dollars_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.dollars, ref_value = "bot"}}, colours = {bot_color}, shadow = true, spacing = 2, bump = true, scale = 0.5})}},
        }}
+   }}
+end
+
+function DV.PRE.get_manual_preview_button()
+   return {n=G.UIT.C, config={id = "dv_pre_manual_button", button = "dv_pre_manual_run", align = "cm", padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
+      {n=G.UIT.R, config={align = "cm"}, nodes={
+         {n=G.UIT.T, config={text = " Preview Score ", colour = G.C.UI.TEXT_LIGHT, shadow = true, scale = 0.36}}
+      }}
    }}
 end
 
@@ -107,6 +121,21 @@ function DV.get_preview_settings_page()
       end
    end
 
+   local function manual_preview_toggle_callback(_)
+      if not G.HUD or not DV.PRE.enabled() then return end
+
+      if G.SETTINGS.DV.manual_preview then
+         -- Manual preview was just enabled, so remove score and add button:
+         G.HUD:get_UIE_by_ID("dv_pre_score").parent:remove()
+         G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+      else
+         -- Manual preview was just disabled, so remove button and add score:
+         G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+         G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+      end
+      G.HUD:recalculate()
+   end
+
    return
       {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
           create_toggle({id = "score_toggle",
@@ -126,6 +155,10 @@ function DV.get_preview_settings_page()
           create_toggle({label = "Hide Preview if Any Card is Face-Down",
                          ref_table = G.SETTINGS.DV,
                          ref_value = "hide_face_down",
-                         callback = face_down_toggle_callback})
+                         callback = face_down_toggle_callback}),
+          create_toggle({label = "Manually Trigger Score Preview",
+                         ref_table = G.SETTINGS.DV,
+                         ref_value = "manual_preview",
+                         callback = manual_preview_toggle_callback})
       }}
 end

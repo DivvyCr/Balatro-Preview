@@ -30,12 +30,21 @@ end
 --
 
 function DV.PRE.add_update_event(trigger)
-   function sim_func()
+   local function sim_func()
       DV.PRE.data = DV.PRE.simulate()
       return true
    end
    if DV.PRE.enabled() then
-      G.E_MANAGER:add_event(Event({trigger = trigger, func = sim_func}))
+      if not G.SETTINGS.DV.manual_preview then
+         G.E_MANAGER:add_event(Event({trigger = trigger, func = sim_func}))
+      else
+         if DV.PRE.previewing then
+            -- Replace score preview with button:
+            G.HUD:get_UIE_by_ID("dv_pre_score").parent:remove()
+            G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+            DV.PRE.previewing = false
+         end
+      end
    end
 end
 
@@ -116,7 +125,7 @@ end
 --
 
 function DV.PRE.add_reset_event(trigger)
-   function reset_func()
+   local function reset_func()
       DV.PRE.data = {score = {min = 0, exact = 0, max = 0}, dollars = {min = 0, exact = 0, max = 0}}
       return true
    end
@@ -235,4 +244,23 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
       e.config.object:update_text()
       if not G.TAROT_INTERRUPT_PULSE then e.config.object:pulse(0.25) end
    end
+end
+
+--
+-- MANUAL PREVIEW:
+--
+
+function G.FUNCS.dv_pre_manual_run(e)
+   -- Run simulation:
+   local function sim_func()
+      DV.PRE.data = DV.PRE.simulate()
+      return true
+   end
+   G.E_MANAGER:add_event(Event({trigger = trigger, func = sim_func}))
+
+   -- Replace button with score preview:
+   G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+   G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+
+   DV.PRE.previewing = true
 end
