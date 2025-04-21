@@ -11,10 +11,15 @@ DV.PRE = {
    },
    text = {
       score = {l = "", r = ""},
-      dollars = {top = "", bot = ""}
+      dollars = {top = "", bot = ""},
+      delay_timer = "0.0"
    },
    joker_order = {},
-   hand_order = {}
+   hand_order = {},
+   delay = {
+      active = false,
+      start = 0
+   }
 }
 
 DV.PRE._start_up = Game.start_up
@@ -30,6 +35,7 @@ function Game:start_up()
       G.SETTINGS.DV.hide_face_down = true
       G.SETTINGS.DV.show_min_max = false
       G.SETTINGS.DV.manual_preview = false
+      G.SETTINGS.DV.delay_length = 5
    end
 
    if not DV.settings then error("Divvy's Preview requires Divvy's Setting tools; re-install Divvy's Preview mod and double-check that there is a 'DVSettings' folder") end

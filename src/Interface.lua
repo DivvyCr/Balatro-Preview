@@ -35,6 +35,17 @@ function DV.PRE.get_score_node()
    }}
 end
 
+function DV.PRE.get_timer_node()
+   local text_scale = nil
+   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
+   else text_scale = 0.75 end
+
+   return {n = G.UIT.C, config={id = "dv_pre_timer", align = "cm"}, nodes={
+              {n=G.UIT.O, config={id = "dv_pre_timer_text", func = "dv_pre_timer_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "delay_timer"}}, colours = {lighten(G.C.GREY, 0.33)}, shadow = true, float = true, scale = text_scale})}}
+   }}
+end
+
+
 function DV.PRE.get_dollars_node()
    local top_color = DV.PRE.get_dollar_colour(0)
    local bot_color = top_color
@@ -136,6 +147,15 @@ function DV.get_preview_settings_page()
       G.HUD:recalculate()
    end
 
+   local delay_options = {0, 3, 5, 10, 15, 20, 30}
+
+   local function option_val2idx(options, val, default)
+      for i, v in ipairs(options) do
+         if v == val then return i end
+      end
+      return default
+   end
+
    return
       {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
           create_toggle({id = "score_toggle",
@@ -156,9 +176,23 @@ function DV.get_preview_settings_page()
                          ref_table = G.SETTINGS.DV,
                          ref_value = "hide_face_down",
                          callback = face_down_toggle_callback}),
-          create_toggle({label = "Manually Trigger Score Preview",
+          create_toggle({label = "Manual Trigger for Preview",
                          ref_table = G.SETTINGS.DV,
                          ref_value = "manual_preview",
-                         callback = manual_preview_toggle_callback})
-      }}
+                         callback = manual_preview_toggle_callback}),
+          create_option_cycle({opt_callback = "dv_pre_set_delay_length",
+                               label = "Delay after Manual Trigger",
+                               options = delay_options,
+                               current_option = option_val2idx(delay_options, G.SETTINGS.DV.delay_length, 3),
+                               scale = 0.8,
+                               info = {
+                                  "In seconds, how long to wait after manual preview was triggered,",
+                                  "before showing the preview values. Does nothing if Manual Trigger is off."
+                               }})
+      }
+   }
+end
+
+function G.FUNCS.dv_pre_set_delay_length(args)
+   G.SETTINGS.DV.delay_length = args.to_val
 end

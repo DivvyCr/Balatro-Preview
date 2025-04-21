@@ -72,9 +72,9 @@ function Card:remove_from_area()
 end
 
 -- Update simulation after joker reordering:
-local orig_update = CardArea.update
+local orig_cardarea_update = CardArea.update
 function CardArea:update(dt)
-   orig_update(self, dt)
+   orig_cardarea_update(self, dt)
    DV.PRE.update_on_card_order_change(self)
 end
 
@@ -210,6 +210,22 @@ function G.FUNCS.dv_pre_score_UI_set(e)
    end
 end
 
+function G.FUNCS.dv_pre_timer_UI_set(e)
+   if DV.PRE.delay.active then
+      local delay_elapsed = G.TIMERS.REAL - DV.PRE.delay.start
+      local delay_remaining = G.SETTINGS.DV.delay_length - delay_elapsed
+      local delay_str_len = math.floor(math.max(0, math.log(delay_remaining, 10))) + 3 -- Always have 1 decimal place
+      DV.PRE.text.delay_timer = tostring(delay_remaining):sub(1, delay_str_len)
+
+      e.config.object:update_text()
+
+      local delay_ratio = delay_elapsed / G.SETTINGS.DV.delay_length
+      if delay_ratio > 0.5 then
+         e.config.object.colours = {mix_colours(G.C.UI.TEXT_LIGHT, lighten(G.C.GREY, 0.33), (delay_ratio-0.5)*2)}
+      end
+   end
+end
+
 function G.FUNCS.dv_pre_dollars_UI_set(e)
    local new_preview_text = ""
    local new_colour = nil
@@ -250,7 +266,33 @@ end
 -- MANUAL PREVIEW:
 --
 
+local orig_game_update = Game.update
+function Game:update(dt)
+   orig_game_update(self, dt)
+
+   if DV.PRE.delay.active and G.TIMERS.REAL > DV.PRE.delay.start + G.SETTINGS.DV.delay_length then
+      DV.PRE.show_preview()
+   end
+end
+
 function G.FUNCS.dv_pre_manual_run(e)
+   print(G.SETTINGS.DV.delay_length)
+   if G.SETTINGS.DV.delay_length > 0 then
+      DV.PRE.delay.active = true
+      DV.PRE.delay.start = G.TIMERS.REAL
+      DV.PRE.show_timer()
+   else
+      DV.PRE.show_preview()
+   end
+end
+
+function DV.PRE.show_timer()
+   -- Replace button with timer:
+   G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+   G.HUD:add_child(DV.PRE.get_timer_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+end
+
+function DV.PRE.show_preview()
    -- Run simulation:
    local function sim_func()
       DV.PRE.data = DV.PRE.simulate()
@@ -258,8 +300,13 @@ function G.FUNCS.dv_pre_manual_run(e)
    end
    G.E_MANAGER:add_event(Event({trigger = trigger, func = sim_func}))
 
-   -- Replace button with score preview:
-   G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+   -- Replace button/timer with score preview:
+   if DV.PRE.delay.active then
+      DV.PRE.delay.active = false
+      G.HUD:get_UIE_by_ID("dv_pre_timer").parent:remove()
+   else
+      G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+   end
    G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
 
    DV.PRE.previewing = true
