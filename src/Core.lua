@@ -87,8 +87,10 @@ function DV.PRE.update_on_card_order_change(cardarea)
    -- Important not to update on G.STATES.HAND_PLAYED, because it would reset the preview text!
 
    local prev_order = nil
-   if cardarea.config.type == 'joker' and cardarea.cards[1].ability.set == 'Joker' then
-      -- Note that the consumables cardarea also has type 'joker' so must verify by checking first card.
+   if cardarea.config.type == 'joker'
+      and cardarea.cards[1].ability.set == 'Joker'                                 -- The consumables cardarea also has type 'joker' so must verify by checking first card.
+      and not (cardarea.cards[1].edition and cardarea.cards[1].edition.mp_phantom) -- The Multiplayer mod has a special joker area that will cause lag here
+   then
       prev_order = DV.PRE.joker_order
    elseif cardarea.config.type == 'hand' then
       prev_order = DV.PRE.hand_order
