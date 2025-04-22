@@ -156,7 +156,7 @@ end
 function G.FUNCS.dv_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
-   if DV.PRE.data then
+   if DV.PRE.data and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button") then
       if G.SETTINGS.DV.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
          -- Format as 'X - Y' :
          if e.config.id == "dv_pre_l" then
@@ -229,7 +229,7 @@ end
 function G.FUNCS.dv_pre_dollars_UI_set(e)
    local new_preview_text = ""
    local new_colour = nil
-   if DV.PRE.data then
+   if DV.PRE.data and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button") then
       if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
          if e.config.id == "dv_pre_dollars_top" then
             new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
@@ -250,7 +250,11 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
          end
       end
    else
-      new_preview_text = " +??"
+      if e.config.id == "dv_pre_dollars_top" then
+         new_preview_text = " +??"
+      else
+         new_preview_text = ""
+      end
       new_colour = DV.PRE.get_dollar_colour(0)
    end
 
