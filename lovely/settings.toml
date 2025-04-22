@@ -1,0 +1,26 @@
+[manifest]
+version = "1.0"
+dump_lua = true
+priority = 10
+
+[[patches]]
+[patches.copy]
+target = "game.lua"
+position = "append"
+sources = [
+  "lib/Balatro-Settings/src/Settings.lua"
+]
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "local t = create_UIBox_generic_options({back_func = 'options',contents = {create_tabs("
+position = "before"
+match_indent = true
+overwrite = false
+payload = '''
+if not DV.settings_tab then
+  tabs[#tabs+1] = DV.create_settings_tab(#tabs)
+  DV.settings_tab = true
+end
+'''

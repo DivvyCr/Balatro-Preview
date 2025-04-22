@@ -1,0 +1,29 @@
+[manifest]
+version = "1.0"
+dump_lua = true
+priority = 5
+
+[[patches]]
+[patches.copy]
+target = "globals.lua"
+position = "append"
+sources = [
+  "lib/Balatro-Simulation/src/Init.lua",
+]
+
+[[patches]]
+[patches.copy]
+target = "functions/common_events.lua"
+position = "append"
+sources = [
+  "lib/Balatro-Simulation/src/Engine.lua",
+  "lib/Balatro-Simulation/src/Utils.lua"
+]
+
+[[patches]]
+[patches.copy]
+target = "card.lua"
+position = "append"
+sources = [
+  "lib/Balatro-Simulation/src/Jokers/_Vanilla.lua"
+]

@@ -1,33 +1,29 @@
 [manifest]
 version = "1.0"
 dump_lua = true
-priority = 5
-
-# This manifest assumes the following release structure:
-#
-# DVPreview/
-# ├─ Core.lua
-# ├─ Init.lua
-# ├─ Interface.lua
-# ├─ Utils.lua
+priority = 0
 
 [[patches]]
 [patches.copy]
 target = "globals.lua"
 position = "append"
-sources = [ "Init.lua" ]
+sources = [
+  "src/Init.lua"
+]
 
 [[patches]]
 [patches.copy]
 target = "main.lua"
 position = "append"
 sources = [
-  "Core.lua",
-  "Utils.lua"
+  "src/Core.lua",
+  "src/Utils.lua"
 ]
 
 [[patches]]
 [patches.copy]
 target = "functions/UI_definitions.lua"
 position = "append"
-sources = [ "Interface.lua" ]
+sources = [
+  "src/Interface.lua"
+]
