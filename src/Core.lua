@@ -156,7 +156,9 @@ end
 function G.FUNCS.dv_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
-   if DV.PRE.data and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button") then
+   if DV.PRE.data and G.SETTINGS.DV.preview_score
+      and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button")
+   then
       if G.SETTINGS.DV.show_min_max and (DV.PRE.data.score.min ~= DV.PRE.data.score.max) then
          -- Format as 'X - Y' :
          if e.config.id == "dv_pre_l" then
@@ -184,9 +186,15 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       end
    else
       -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
-      if e.config.id == "dv_pre_l" then
-         if G.SETTINGS.DV.show_min_max then new_preview_text = " ?????? "
-         else new_preview_text = "??????"
+      if e.config.id == "dv_pre_l" and DV.PRE.enabled() then
+         if G.SETTINGS.DV.preview_score then
+            new_preview_text = "??????"
+         else
+            new_preview_text = "Score Preview Off"
+         end
+
+         if G.SETTINGS.DV.show_min_max then
+            new_preview_text = " ".. new_preview_text .." "
          end
       else
          new_preview_text = ""
@@ -198,8 +206,7 @@ function G.FUNCS.dv_pre_score_UI_set(e)
       e.config.object:update_text()
       -- Wobble:
       if not G.TAROT_INTERRUPT_PULSE then
-         if should_juice
-         then
+         if should_juice then
             G.FUNCS.text_super_juice(e, 5)
             e.config.object.colours = {G.C.MONEY}
          else
@@ -219,9 +226,8 @@ function G.FUNCS.dv_pre_timer_UI_set(e)
 
       e.config.object:update_text()
 
-      local delay_ratio = delay_elapsed / G.SETTINGS.DV.delay_length
-      if delay_ratio > 0.5 then
-         e.config.object.colours = {mix_colours(G.C.UI.TEXT_LIGHT, lighten(G.C.GREY, 0.33), (delay_ratio-0.5)*2)}
+      if delay_remaining < 5 then
+         e.config.object.colours = {mix_colours(G.C.UI.TEXT_LIGHT, lighten(G.C.GREY, 0.33), 1-(delay_remaining / math.min(G.SETTINGS.DV.delay_length, 5)))}
       end
    end
 end
@@ -229,7 +235,10 @@ end
 function G.FUNCS.dv_pre_dollars_UI_set(e)
    local new_preview_text = ""
    local new_colour = nil
-   if DV.PRE.data and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button") then
+   if DV.PRE.data and G.SETTINGS.DV.preview_dollars
+      and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button")
+      and G.SETTINGS.DV.manual_preview
+   then
       if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
          if e.config.id == "dv_pre_dollars_top" then
             new_preview_text = " " .. DV.PRE.get_sign_str(DV.PRE.data.dollars.max) .. DV.PRE.data.dollars.max
@@ -250,7 +259,7 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
          end
       end
    else
-      if e.config.id == "dv_pre_dollars_top" then
+      if e.config.id == "dv_pre_dollars_top" and G.SETTINGS.DV.preview_dollars then
          new_preview_text = " +??"
       else
          new_preview_text = ""
