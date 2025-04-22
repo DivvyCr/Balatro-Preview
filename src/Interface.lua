@@ -45,7 +45,6 @@ function DV.PRE.get_timer_node()
    }}
 end
 
-
 function DV.PRE.get_dollars_node()
    local top_color = DV.PRE.get_dollar_colour(0)
    local bot_color = top_color
@@ -66,7 +65,11 @@ function DV.PRE.get_dollars_node()
 end
 
 function DV.PRE.get_manual_preview_button()
-   return {n=G.UIT.C, config={id = "dv_pre_manual_button", button = "dv_pre_manual_run", align = "cm", padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
+   local button_height = nil
+   if G.SETTINGS.DV.show_min_max then button_height = 0.42
+   else button_height = 0.62 end
+
+   return {n=G.UIT.C, config={id = "dv_pre_manual_button", button = "dv_pre_manual_run", align = "cm", minh = button_height, padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
       {n=G.UIT.R, config={align = "cm"}, nodes={
          {n=G.UIT.T, config={text = " Preview Score ", colour = G.C.UI.TEXT_LIGHT, shadow = true, scale = 0.36}}
       }}
@@ -119,14 +122,23 @@ function DV.get_preview_settings_page()
       DV.PRE.data = DV.PRE.simulate()
 
       if G.SETTINGS.DV.preview_score then
+         local manual_button = G.HUD:get_UIE_by_ID("dv_pre_manual_button")
          if not G.SETTINGS.DV.show_min_max then
             -- Min-Max was just disabled, so increase scale:
-            G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
-            G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
+            if not manual_button then
+               G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.75
+               G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.75
+            else
+               manual_button.config.minh = 0.62
+            end
          else
             -- Min-Max was just enabled, so decrease scale:
-            G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.5
-            G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.5
+            if not manual_button then
+               G.HUD:get_UIE_by_ID("dv_pre_l").config.object.scale = 0.5
+               G.HUD:get_UIE_by_ID("dv_pre_r").config.object.scale = 0.5
+            else
+               manual_button.config.minh = 0.42
+            end
          end
          G.HUD:recalculate()
       end
@@ -140,9 +152,12 @@ function DV.get_preview_settings_page()
          G.HUD:get_UIE_by_ID("dv_pre_score").parent:remove()
          G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
       else
-         -- Manual preview was just disabled, so remove button and add score:
-         G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
-         G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+         -- Manual preview was just disabled, so remove button (if it's currently visible) and add score:
+         local manual_button = G.HUD:get_UIE_by_ID("dv_pre_manual_button")
+         if manual_button then
+            manual_button.parent:remove()
+            G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+         end
       end
       G.HUD:recalculate()
    end
