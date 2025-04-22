@@ -4,6 +4,8 @@
 
 if not DV then DV = {} end
 
+if DV.PRE then error("Cannot load Divvy's Preview multiple times!") end
+
 DV.PRE = {
    data = {
       score = {min = 0, exact = 0, max = 0},
