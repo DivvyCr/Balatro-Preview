@@ -25,23 +25,19 @@ function create_UIBox_HUD()
 end
 
 function DV.PRE.get_score_node()
-   local text_scale = nil
-   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
-   else text_scale = 0.75 end
+   local ui_scale = DV.PRE.get_score_ui_scale()
 
-   return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm"}, nodes={
-              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
-              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = text_scale})}},
+   return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm", minh = ui_scale.node_height}, nodes={
+              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = ui_scale.text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = ui_scale.text_scale})}},
    }}
 end
 
 function DV.PRE.get_timer_node()
-   local text_scale = nil
-   if G.SETTINGS.DV.show_min_max then text_scale = 0.5
-   else text_scale = 0.75 end
+   local ui_scale = DV.PRE.get_score_ui_scale()
 
-   return {n = G.UIT.C, config={id = "dv_pre_timer", align = "cm"}, nodes={
-              {n=G.UIT.O, config={id = "dv_pre_timer_text", func = "dv_pre_timer_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "delay_timer"}}, colours = {lighten(G.C.GREY, 0.33)}, shadow = true, float = true, scale = text_scale})}}
+   return {n = G.UIT.C, config={id = "dv_pre_timer", align = "cm", minh = ui_scale.node_height}, nodes={
+              {n=G.UIT.O, config={id = "dv_pre_timer_text", func = "dv_pre_timer_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text, ref_value = "delay_timer"}}, colours = {lighten(G.C.GREY, 0.33)}, shadow = true, float = true, scale = ui_scale.text_scale})}}
    }}
 end
 
@@ -65,11 +61,9 @@ function DV.PRE.get_dollars_node()
 end
 
 function DV.PRE.get_manual_preview_button()
-   local button_height = nil
-   if G.SETTINGS.DV.show_min_max then button_height = 0.42
-   else button_height = 0.62 end
+   local ui_scale = DV.PRE.get_score_ui_scale()
 
-   return {n=G.UIT.C, config={id = "dv_pre_manual_button", button = "dv_pre_manual_run", align = "cm", minh = button_height, padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
+   return {n=G.UIT.C, config={id = "dv_pre_manual_button", button = "dv_pre_manual_run", align = "cm", minh = ui_scale.node_height, padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
       {n=G.UIT.R, config={align = "cm"}, nodes={
          {n=G.UIT.T, config={text = " Preview Score ", colour = G.C.UI.TEXT_LIGHT, shadow = true, scale = 0.36}}
       }}

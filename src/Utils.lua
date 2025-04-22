@@ -36,6 +36,19 @@ function DV.PRE.get_sign_str(n)
    end
 end
 
+function DV.PRE.get_score_ui_scale()
+   local text_scale = nil
+   local node_height = nil
+   if G.SETTINGS.DV.show_min_max then
+      text_scale = 0.5
+      node_height = 0.42
+   else
+      text_scale = 0.75
+      node_height = 0.62
+   end
+   return {text_scale = text_scale, node_height = node_height}
+end
+
 function DV.PRE.enabled()
    return G.SETTINGS.DV.preview_score or G.SETTINGS.DV.preview_dollars
 end
