@@ -41,9 +41,13 @@ function DV.PRE.add_update_event(trigger)
          if DV.PRE.previewing then
             -- Replace score preview with button:
             local score_node = G.HUD:get_UIE_by_ID("dv_pre_score")
-            if score_node then score_node.parent:remove() end
+            if score_node then
+               score_node.parent:remove()
+               G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+            elseif not G.HUD:get_UIE_by_ID("dv_pre_manual_button") then
+               G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
+            end
 
-            G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
             DV.PRE.previewing = false
          end
       end
@@ -308,7 +312,8 @@ end
 
 function DV.PRE.show_timer()
    -- Replace button with timer:
-   G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+   local manual_button = G.HUD:get_UIE_by_ID("dv_pre_manual_button")
+   if manual_button then manual_button.parent:remove() end
    G.HUD:add_child(DV.PRE.get_timer_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
 end
 
@@ -323,9 +328,12 @@ function DV.PRE.show_preview()
    -- Replace button/timer with score preview:
    if DV.PRE.delay.active then
       DV.PRE.delay.active = false
-      G.HUD:get_UIE_by_ID("dv_pre_timer").parent:remove()
+
+      local timer_node = G.HUD:get_UIE_by_ID("dv_pre_timer")
+      if timer_node then timer_node.parent:remove() end
    else
-      G.HUD:get_UIE_by_ID("dv_pre_manual_button").parent:remove()
+      local manual_button = G.HUD:get_UIE_by_ID("dv_pre_manual_button")
+      if manual_button then manual_button.parent:remove() end
    end
    G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
 

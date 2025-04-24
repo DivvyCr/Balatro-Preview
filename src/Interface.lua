@@ -114,11 +114,11 @@ function DV.get_preview_settings_page()
    local function update_preview_score(_)
       if not G.HUD then return end
 
-      if G.SETTINGS.DV.preview_score
+      if G.SETTINGS.DV.preview_score and not G.SETTINGS.DV.manual_preview
       then -- Preview was just enabled, so add score:
          G.HUD:add_child(DV.PRE.get_score_node(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
          DV.PRE.data = DV.PRE.simulate()
-      else -- Preview was just disabled, so remove preview node (or manual trigger):
+      else -- Preview was just disabled, so remove preview node:
          local score_node = G.HUD:get_UIE_by_ID("dv_pre_score")
          if score_node then score_node.parent:remove() end
       end
