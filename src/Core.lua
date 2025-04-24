@@ -40,7 +40,9 @@ function DV.PRE.add_update_event(trigger)
       else
          if DV.PRE.previewing then
             -- Replace score preview with button:
-            G.HUD:get_UIE_by_ID("dv_pre_score").parent:remove()
+            local score_node = G.HUD:get_UIE_by_ID("dv_pre_score")
+            if score_node then score_node.parent:remove() end
+
             G.HUD:add_child(DV.PRE.get_manual_preview_button(), G.HUD:get_UIE_by_ID("dv_pre_score_wrap"))
             DV.PRE.previewing = false
          end
@@ -211,6 +213,9 @@ function G.FUNCS.dv_pre_score_UI_set(e)
          if should_juice then
             G.FUNCS.text_super_juice(e, 5)
             e.config.object.colours = {G.C.MONEY}
+         elseif new_preview_text:find("Off") then
+            G.FUNCS.text_super_juice(e, 0)
+            e.config.object.colours = {lighten(G.C.GREY, 0.33)}
          else
             G.FUNCS.text_super_juice(e, 0)
             e.config.object.colours = {G.C.UI.TEXT_LIGHT}

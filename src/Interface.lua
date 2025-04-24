@@ -25,11 +25,20 @@ function create_UIBox_HUD()
 end
 
 function DV.PRE.get_score_node()
+   -- TODO: Improve special case handling here. Possible to call G.FUNCS.dv_pre_score_UI_set(e) ?
+
+   local text_colour = G.C.UI.TEXT_LIGHT
    local ui_scale = DV.PRE.get_score_ui_scale()
 
+   -- This handles 'Score Preview Off' text (if present):
+   if not G.SETTINGS.DV.preview_score then
+      text_colour = lighten(G.C.GREY, 0.33)
+      ui_scale.text_scale = 0.5
+   end
+
    return {n = G.UIT.C, config = {id = "dv_pre_score", align = "cm", minh = ui_scale.node_height}, nodes={
-              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = ui_scale.text_scale})}},
-              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {G.C.UI.TEXT_LIGHT}, shadow = true, float = true, scale = ui_scale.text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_l", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "l"}}, colours = {text_colour}, shadow = true, float = true, scale = ui_scale.text_scale})}},
+              {n=G.UIT.O, config={id = "dv_pre_r", func = "dv_pre_score_UI_set", object = DynaText({string = {{ref_table = DV.PRE.text.score, ref_value = "r"}}, colours = {text_colour}, shadow = true, float = true, scale = ui_scale.text_scale})}},
    }}
 end
 

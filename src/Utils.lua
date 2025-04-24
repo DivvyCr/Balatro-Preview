@@ -36,10 +36,10 @@ function DV.PRE.get_sign_str(n)
    end
 end
 
-function DV.PRE.get_score_ui_scale()
+function DV.PRE.get_score_ui_scale(force_small)
    local text_scale = nil
    local node_height = nil
-   if G.SETTINGS.DV.show_min_max then
+   if G.SETTINGS.DV.show_min_max or force_small then
       text_scale = 0.5
       node_height = 0.42
    else
