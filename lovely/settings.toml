@@ -20,7 +20,19 @@ match_indent = true
 overwrite = false
 payload = '''
 if not DV.settings_tab then
-  tabs[#tabs+1] = DV.create_settings_tab(#tabs)
+  tabs[#tabs+1] = DV.create_settings_tab()
   DV.settings_tab = true
 end
+'''
+
+[[patches]]
+[patches.regex]
+target = "functions/UI_definitions.lua"
+pattern = '''tab_alignment = 'tm',\n\s+snap_to_nav = true}\n\s+\)}}\)\n'''
+position = "after"
+match_indent = true
+overwrite = false
+# Reset for next UI create/update
+payload = '''
+DV.settings_tab = false
 '''
