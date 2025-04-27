@@ -1,0 +1,19 @@
+{
+	"id": "DVPreview",
+	"name": "Divvy's Preview",
+	"author": ["Divvy C."],
+	"description": "Simulate the exact score you will get by playing the selected cards! This mod is NOT COMPATIBLE with other content mods; it only works with vanilla Balatro.",
+	"prefix": "dvpreview",
+	"main_file": "lib/steamodded.lua",
+	"priority": 0,
+	"badge_colour": "6495ED",
+	"badge_text_colour": "FFFFFF",
+	"version": "4.0.0",
+	"dependencies": [
+		"Lovely (>=0.6)"
+	],
+	"conflicts": [
+		"Talisman (>=0.0)"
+	],
+	"dump_loc": false
+}
