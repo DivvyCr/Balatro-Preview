@@ -248,7 +248,6 @@ function G.FUNCS.dv_pre_dollars_UI_set(e)
    local new_colour = nil
    if DV.PRE.data and G.SETTINGS.DV.preview_dollars
       and not DV.PRE.delay.active and not G.HUD:get_UIE_by_ID("dv_pre_manual_button")
-      and G.SETTINGS.DV.manual_preview
    then
       if G.SETTINGS.DV.show_min_max and (DV.PRE.data.dollars.min ~= DV.PRE.data.dollars.max) then
          if e.config.id == "dv_pre_dollars_top" then
