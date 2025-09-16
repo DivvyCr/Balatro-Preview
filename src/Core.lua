@@ -300,7 +300,6 @@ function Game:update(dt)
 end
 
 function G.FUNCS.dv_pre_manual_run(e)
-   print(G.SETTINGS.DV.delay_length)
    if G.SETTINGS.DV.delay_length > 0 then
       DV.PRE.delay.active = true
       DV.PRE.delay.start = G.TIMERS.REAL
