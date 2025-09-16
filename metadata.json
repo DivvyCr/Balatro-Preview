@@ -8,12 +8,9 @@
 	"priority": 0,
 	"badge_colour": "6495ED",
 	"badge_text_colour": "FFFFFF",
-	"version": "4.0.0",
+	"version": "4.1.0",
 	"dependencies": [
-		"Lovely (>=0.6)"
-	],
-	"conflicts": [
-		"Talisman (>=0.0)"
+		"Lovely (>=0.8)"
 	],
 	"dump_loc": false
 }
