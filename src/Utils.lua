@@ -7,8 +7,10 @@ function DV.PRE.is_enough_to_win(chips)
       (G.STATE == G.STATES.SELECTING_HAND or
        G.STATE == G.STATES.DRAW_TO_HAND or
        G.STATE == G.STATES.PLAY_TAROT)
-   then return (G.GAME.chips + chips >= G.GAME.blind.chips)
-   else return false
+   then
+      return (DV.PRE.to_big(G.GAME.chips) + DV.PRE.to_big(chips) >= DV.PRE.to_big(G.GAME.blind.chips))
+   else
+      return false
    end
 end
 
@@ -51,4 +53,15 @@ end
 
 function DV.PRE.enabled()
    return G.SETTINGS.DV.preview_score or G.SETTINGS.DV.preview_dollars
+end
+
+-- The following is necessary for custom handling of Talisman.
+-- Specifically, we have to deal with Talisman's big numbers,
+-- so this function provides a safe way to convert a number to Talisman's Big.
+function DV.PRE.to_big(x)
+   if type(x) == 'number' and to_big then
+      return to_big(x)
+   else
+      return x
+   end
 end
