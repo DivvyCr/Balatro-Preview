@@ -74,7 +74,7 @@ function DV.PRE.get_manual_preview_button()
 
    return {n=G.UIT.C, config={id = "dv_pre_manual_button", button = "dv_pre_manual_run", align = "cm", minh = ui_scale.node_height, padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
       {n=G.UIT.R, config={align = "cm"}, nodes={
-         {n=G.UIT.T, config={text = " Preview Score ", colour = G.C.UI.TEXT_LIGHT, shadow = true, scale = 0.36}}
+         {n=G.UIT.T, config={text = DV.PRE.t('dv_preview_score_btn'), colour = G.C.UI.TEXT_LIGHT, shadow = true, scale = 0.36}}
       }}
    }}
 end
@@ -186,37 +186,37 @@ function DV.get_preview_settings_page()
 
    return
       {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
-          create_toggle({id = "score_toggle",
-                         label = "Enable Score Preview",
-                         ref_table = G.SETTINGS.DV,
-                         ref_value = "preview_score",
-                         callback = update_preview_score}),
-          create_toggle({id = "dollars_toggle",
-                         label = "Enable Money Preview",
-                         ref_table = G.SETTINGS.DV,
-                         ref_value = "preview_dollars",
-                         callback = update_preview_dollars}),
-          create_toggle({label = "Show Min/Max Preview Instead of Exact",
-                         ref_table = G.SETTINGS.DV,
-                         ref_value = "show_min_max",
-                         callback = toggle_minmax}),
-          create_toggle({label = "Hide Preview if Any Card is Face-Down",
-                         ref_table = G.SETTINGS.DV,
-                         ref_value = "hide_face_down",
-                         callback = toggle_face_down}),
-          create_toggle({label = "Manual Trigger for Preview",
-                         ref_table = G.SETTINGS.DV,
-                         ref_value = "manual_preview",
-                         callback = update_manual_preview}),
-          create_option_cycle({opt_callback = "dv_pre_set_delay_length",
-                               label = "Delay after Manual Trigger",
-                               options = delay_options,
-                               current_option = option_val2idx(delay_options, G.SETTINGS.DV.delay_length, 3),
-                               scale = 0.8,
-                               info = {
-                                  "In seconds, how long to wait after manual preview was triggered,",
-                                  "before showing the preview values. Does nothing if Manual Trigger is off."
-                               }})
+           create_toggle({id = "score_toggle",
+                          label = DV.PRE.t('dv_enable_score'),
+                          ref_table = G.SETTINGS.DV,
+                          ref_value = "preview_score",
+                          callback = update_preview_score}),
+           create_toggle({id = "dollars_toggle",
+                          label = DV.PRE.t('dv_enable_dollars'),
+                          ref_table = G.SETTINGS.DV,
+                          ref_value = "preview_dollars",
+                          callback = update_preview_dollars}),
+           create_toggle({label = DV.PRE.t('dv_show_minmax'),
+                          ref_table = G.SETTINGS.DV,
+                          ref_value = "show_min_max",
+                          callback = toggle_minmax}),
+           create_toggle({label = DV.PRE.t('dv_hide_facedown'),
+                          ref_table = G.SETTINGS.DV,
+                          ref_value = "hide_face_down",
+                          callback = toggle_face_down}),
+           create_toggle({label = DV.PRE.t('dv_manual_trigger'),
+                          ref_table = G.SETTINGS.DV,
+                          ref_value = "manual_preview",
+                          callback = update_manual_preview}),
+           create_option_cycle({opt_callback = "dv_pre_set_delay_length",
+                                label = DV.PRE.t('dv_delay_label'),
+                                options = delay_options,
+                                current_option = option_val2idx(delay_options, G.SETTINGS.DV.delay_length, 3),
+                                scale = 0.8,
+                                info = {
+                                   DV.PRE.t('dv_delay_info_1'),
+                                   DV.PRE.t('dv_delay_info_2')
+                                }})
       }
    }
 end

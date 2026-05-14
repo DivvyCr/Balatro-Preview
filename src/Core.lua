@@ -198,7 +198,7 @@ function G.FUNCS.dv_pre_score_UI_set(e)
          if G.SETTINGS.DV.preview_score then
             new_preview_text = "??????"
          else
-            new_preview_text = "Score Preview Off"
+            new_preview_text = DV.PRE.t('dv_score_off')
          end
 
          if G.SETTINGS.DV.show_min_max then
