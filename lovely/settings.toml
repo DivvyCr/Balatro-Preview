@@ -20,7 +20,7 @@ match_indent = true
 overwrite = false
 payload = '''
 if not DV.settings_tab then
-  tabs[#tabs+1] = DV.create_settings_tab()
+  tabs[#tabs+1] = DV.create_settings_tab(#tabs)
   DV.settings_tab = true
 end
 '''
