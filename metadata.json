@@ -2,7 +2,7 @@
 	"id": "DVPreview",
 	"name": "Divvy's Preview",
 	"author": ["Divvy C."],
-	"description": "Simulate the exact score you will get by playing the selected cards! This mod is NOT COMPATIBLE with other content mods; it only works with vanilla Balatro.",
+	"description": "Simulate the exact score you will get by playing the selected cards! Works with modded jokers, cards, consumables and blinds by replaying the real Play Hand flow in a sandbox.",
 	"prefix": "dvpreview",
 	"main_file": "lib/steamodded.lua",
 	"priority": 0,

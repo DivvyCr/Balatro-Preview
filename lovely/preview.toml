@@ -17,7 +17,9 @@ target = "main.lua"
 position = "append"
 sources = [
   "src/Core.lua",
-  "src/Utils.lua"
+  "src/Utils.lua",
+  "src/Sandbox.lua",
+  "src/Engine.lua"
 ]
 
 [[patches]]
