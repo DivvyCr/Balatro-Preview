@@ -40,6 +40,10 @@ function Game:start_up()
       G.SETTINGS.DV.delay_length = 5
    end
 
+   -- Settings added after the first release, so they also get defaults for existing profiles:
+   if G.SETTINGS.DV.accurate_engine == nil then G.SETTINGS.DV.accurate_engine = true end
+   if G.SETTINGS.DV.audit_log == nil then G.SETTINGS.DV.audit_log = true end
+
    if not DV.settings then error("Divvy's Preview requires Divvy's Setting tools; re-install Divvy's Preview mod and double-check that there is a 'DVSettings' folder") end
    G.DV.options["Score Preview"] = "get_preview_settings_page"
 end
